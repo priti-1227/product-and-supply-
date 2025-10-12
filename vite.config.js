@@ -14,3 +14,13 @@ export default defineConfig({
     }
   }
 })
+
+// THIS CODE IS FOR VERCEL,JSON FILE FOR PRODUCTION THE ABOVE SOLUTION IS APPLY FOR TEMP BASED AS WE DONT HAVE BACKEND HTTPS
+// {
+//   "rewrites": [
+//     {
+//       "source": "/(.*)",
+//       "destination": "/index.html"
+//     }
+//   ]
+// }
