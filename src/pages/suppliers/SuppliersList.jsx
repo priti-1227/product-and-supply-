@@ -215,15 +215,15 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
       <TableRow>
         <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>ID</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Name</TableCell>
-        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Contact Person</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" ,whiteSpace: "nowrap"}}>Contact Person</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Email</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Mobile</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Landline</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>WhatsApp</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Viber</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Address</TableCell>
-        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Created At</TableCell>
-        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Updated At</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" ,whiteSpace: "nowrap"}}>Created At</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" ,whiteSpace: "nowrap"}}>Updated At</TableCell>
         <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Actions</TableCell>
       </TableRow>
     </TableHead>
@@ -239,17 +239,19 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
         suppliers.map((supplier) => (
           <TableRow key={supplier.id} hover>
             <TableCell align="center">{supplier.id}</TableCell>
-            <TableCell>{supplier.name || "N/A"}</TableCell>
-            <TableCell>{supplier.contact_person || "N/A"}</TableCell>
-            <TableCell>{supplier.email || "N/A"}</TableCell>
-            <TableCell align="center">{supplier.mobile || "N/A"}</TableCell>
-            <TableCell align="center">{supplier.landline || "N/A"}</TableCell>
-            <TableCell align="center">{supplier.whatsapp || "N/A"}</TableCell>
-            <TableCell align="center">{supplier.viber || "N/A"}</TableCell>
-            <TableCell>{supplier.address || "N/A"}</TableCell>
+            <TableCell>{supplier.name || "-"}</TableCell>
+            <TableCell>{supplier.contact_person || "-"}</TableCell>
+            <TableCell>{supplier.email || "-"}</TableCell>
+            <TableCell align="center">{supplier.mobile || "-"}</TableCell>
+            <TableCell align="center">{supplier.landline || "-"}</TableCell>
+            <TableCell align="center">{supplier.whatsapp || "-"}</TableCell>
+            <TableCell align="center">{supplier.viber || "-"}</TableCell>
+            <TableCell>{supplier.address || "-"}</TableCell>
             <TableCell align="center">{new Date(supplier.created_at).toLocaleDateString()}</TableCell>
             <TableCell align="center">{new Date(supplier.updated_at).toLocaleDateString()}</TableCell>
-            <TableCell align="center">
+            <TableCell align="center" >
+              <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+              
               <IconButton
                 size="small"
                 color="primary"
@@ -265,6 +267,7 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
               >
                 <DeleteIcon />
               </IconButton>
+              </Box>
             </TableCell>
           </TableRow>
         ))
