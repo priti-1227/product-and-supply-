@@ -3,6 +3,7 @@ import { Stack, Chip } from "@mui/material"
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord"
 import SupplierImg from "../assets/supplier.png"
 import ProductImg from "../assets/product.png"
+import cardAnalytics1 from "../assets/card-analytics-1.png"
 
 
 
@@ -63,9 +64,9 @@ function Dashboard() {
         {/* 3D Sphere / Image */}
         <Box
           component="img"
-          src="" // replace with your actual image or SVG
+          src={cardAnalytics1} // replace with your actual image or SVG
           alt="3D Sphere"
-          sx={{ width: 100, height: 100 }}
+          sx={{ width: 150, height: 150 }}
         />
       </Box>
     </Card>

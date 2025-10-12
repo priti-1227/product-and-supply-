@@ -81,9 +81,9 @@ function SupplierListUpload() {
             {isUploading ? "Uploading..." : "Upload File"}
             <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
           </Button>
-          <Button variant="outlined" startIcon={<DownloadIcon />}>
+          {/* <Button variant="outlined" startIcon={<DownloadIcon />}>
             Download Template
-          </Button>
+          </Button> */}
         </Box>
 
         {isUploading && <LinearProgress sx={{ mb: 2 }} />}
