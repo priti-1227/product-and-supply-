@@ -47,7 +47,7 @@ const initialSuppliers = [
   { id: 3, uniqueId: "SUP-003", name: "Office Supplies Pro", email: "sales@officesupplies.pro", contactNo: "555-123-4567", status: "Inactive" },
 ];
 
-const USE_DUMMY_DATA = true;
+const USE_DUMMY_DATA = false;
 function SuppliersList() {
   const navigate = useNavigate()
   const { showNotification } = useNotification()
@@ -57,11 +57,11 @@ function SuppliersList() {
   const [selectedSupplier, setSelectedSupplier] = useState(null)
   const [isActive, setIsActive] = useState(false);
 
-  const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
-    page: page + 1,
-    limit: rowsPerPage,
-   
-  })
+const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
+  page: page + 1, // Add 1 because MUI's page is 0-indexed, but APIs are usually 1-indexed
+  limit: rowsPerPage,
+}); 
+
 
   // --- MODIFIED: Manage suppliers state with localStorage ---
   const [localSuppliers, setLocalSuppliers] = useState(() => {
@@ -130,21 +130,22 @@ function SuppliersList() {
 
 // UNCOMMENT FOR ERROR HANDLING 
 
-//   if (isError) {
-//     return (
-//       <Box>
-//         <Alert severity="error" sx={{ mb: 2 }}>
-//           {handleApiError(error)}
-//         </Alert>
-//         <Button variant="contained" onClick={refetch}>
-//           Retry
-//         </Button>
-//       </Box>
-//     )
-//   }
+  if (isError) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {handleApiError(error)}
+        </Alert>
+        <Button variant="contained" onClick={refetch}>
+          Retry
+        </Button>
+      </Box>
+    )
+  }
 
-//   const suppliers = data?.data || []
-  const suppliers = localSuppliers;
+  const suppliers = data?.data  || []
+  console.log(suppliers, "test suppliers")
+  // const suppliers = localSuppliers; for dummy
   const totalCount = data?.total || 0
 
   return (
@@ -208,75 +209,69 @@ function SuppliersList() {
 
   </Box>
 
-        <TableContainer  sx={{ maxHeight: 300 }}>
-          <Table  stickyHeader aria-label="sticky table">
-            <TableHead sx={{letterSpacing: "0.05em"}}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center", bgcolor:"primary.light",letterSpacing: "0.05em", }}>Supplier ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center",}}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center",bgcolor:"primary.light" }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center",}}>Contact No</TableCell>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center",bgcolor:"primary.light" }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center", }} align="right">
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {suppliers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography color="text.secondary">No suppliers found</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                suppliers.map((supplier) => (
-                  <TableRow key={supplier.id} hover>
-                    <TableCell>{supplier.uniqueId || supplier.id}</TableCell>
-                    <TableCell>{supplier.name}</TableCell>
-                    <TableCell>{supplier.email}</TableCell>
-                    <TableCell>{supplier.contactNo}</TableCell>
-                    <TableCell>
-                      {/* <Chip
-                        label={supplier.status}
-                        color={supplier.status === "Active" ? "success" : "default"}
-                        size="small"
-                      /> */}
-                        <Box display="flex" alignItems="center" gap={1}>
-    <Switch
-      checked={supplier.status === "Active"} // active = on, inactive = off
-      color="success"
-      disabled // read-only
-      inputProps={{ "aria-label": "status switch" }}
-    />
-    <Typography variant="body2">
-      {supplier.status}
-    </Typography>
-  </Box>
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => navigate(`/suppliers/edit/${supplier.id}`)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(supplier)}
-                        disabled={isDeleting}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+       <TableContainer sx={{ maxHeight: 400 }}>
+  <Table stickyHeader aria-label="sticky table">
+    <TableHead sx={{ letterSpacing: "0.05em" }}>
+      <TableRow>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>ID</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Name</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Contact Person</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Email</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Mobile</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Landline</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>WhatsApp</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Viber</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Address</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Created At</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light" }}>Updated At</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Actions</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {suppliers.length === 0 ? (
+        <TableRow>
+          {/* Updated colSpan to match all 12 columns */}
+          <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+            <Typography color="text.secondary">No suppliers found</Typography>
+          </TableCell>
+        </TableRow>
+      ) : (
+        suppliers.map((supplier) => (
+          <TableRow key={supplier.id} hover>
+            <TableCell align="center">{supplier.id}</TableCell>
+            <TableCell>{supplier.name || "N/A"}</TableCell>
+            <TableCell>{supplier.contact_person || "N/A"}</TableCell>
+            <TableCell>{supplier.email || "N/A"}</TableCell>
+            <TableCell align="center">{supplier.mobile || "N/A"}</TableCell>
+            <TableCell align="center">{supplier.landline || "N/A"}</TableCell>
+            <TableCell align="center">{supplier.whatsapp || "N/A"}</TableCell>
+            <TableCell align="center">{supplier.viber || "N/A"}</TableCell>
+            <TableCell>{supplier.address || "N/A"}</TableCell>
+            <TableCell align="center">{new Date(supplier.created_at).toLocaleDateString()}</TableCell>
+            <TableCell align="center">{new Date(supplier.updated_at).toLocaleDateString()}</TableCell>
+            <TableCell align="center">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => navigate(`/suppliers/edit/${supplier.id}`)}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleDeleteClick(supplier)}
+                disabled={isDeleting}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </TableCell>
+          </TableRow>
+        ))
+      )}
+    </TableBody>
+  </Table>
+</TableContainer>
 
         <TablePagination
           component="div"

@@ -2,7 +2,7 @@ import { fetchBaseQuery } from "@reduxjs/toolkit/query/react"
 
 // Base query with authentication and error handling
 export const baseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
+  baseUrl: import.meta.env.VITE_API_BASE_URL || "http://54.167.114.0/api/",
   prepareHeaders: (headers,) => {
     // Add authentication token if available
     const token = localStorage.getItem("authToken")
