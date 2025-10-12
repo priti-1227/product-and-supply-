@@ -8,7 +8,7 @@ import SaveIcon from "@mui/icons-material/Save"
 import { useCreateSupplierMutation } from "../../store/api/suppliersApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
-const USE_DUMMY_DATA = true;
+const USE_DUMMY_DATA = false;
 function AddSupplier() {
   const navigate = useNavigate()
   const { showNotification } = useNotification()
@@ -78,7 +78,7 @@ function AddSupplier() {
   <form style={{ width: "100%" }} onSubmit={handleSubmit(onSubmit)}>
   <Grid container
         spacing={3}>
-    <Box
+    {/* <Box
       display={"grid"}
       gridTemplateColumns={{ xs: "1fr", md: "1fr  2fr" }}
       spacing={3}
@@ -110,7 +110,8 @@ function AddSupplier() {
             />
           </Grid>
 
-    </Box>
+    </Box> */}
+    {/* NAME */}
     <Box
       display={"grid"}
       gridTemplateColumns={{ xs: "1fr", md: "1fr  2fr" }}
@@ -142,6 +143,106 @@ function AddSupplier() {
           </Grid>
 
     </Box>
+    {/* contact person */}
+         <Box
+  display={"grid"}
+  gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
+  gap={3}
+  mx={"auto"}
+  sx={{ width: { xs: "100%", lg: "50%" } }}
+  alignItems={"center"}
+  justifyContent={"center"}
+>
+  {/* Contact person Label */}
+  <Grid
+    sx={{
+      width: "100%",
+      display: "flex",
+      flexDirection: { xs: "row", md: "row-reverse" },
+      fontWeight: 600,
+    }}
+  >
+    Contact Person
+  </Grid>
+
+  {/* Contact person Input */}
+  <Grid item xs={6}>
+    <TextField
+      fullWidth
+      {...register("contact_person", { required: "Contact person is required" })}
+      error={!!errors.contactNo}
+      helperText={errors.contactNo?.message}
+      placeholder="Contact person "
+    />
+  </Grid>
+</Box>
+{/* Landline */}
+         <Box
+  display={"grid"}
+  gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
+  gap={3}
+  mx={"auto"}
+  sx={{ width: { xs: "100%", lg: "50%" } }}
+  alignItems={"center"}
+  justifyContent={"center"}
+>
+  {/* landline Label */}
+  <Grid
+    sx={{
+      width: "100%",
+      display: "flex",
+      flexDirection: { xs: "row", md: "row-reverse" },
+      fontWeight: 600,
+    }}
+  >
+    Landline
+  </Grid>
+
+  {/* landline Input */}
+  <Grid item xs={6}>
+    <TextField
+      fullWidth
+      {...register("landline")}
+      error={!!errors.landline}
+      helperText={errors.landline?.message}
+      placeholder="landline"
+    />
+  </Grid>
+</Box>
+    {/* mobile */}
+         <Box
+  display={"grid"}
+  gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
+  gap={3}
+  mx={"auto"}
+  sx={{ width: { xs: "100%", lg: "50%" } }}
+  alignItems={"center"}
+  justifyContent={"center"}
+>
+  {/* mobile Number Label */}
+  <Grid
+    sx={{
+      width: "100%",
+      display: "flex",
+      flexDirection: { xs: "row", md: "row-reverse" },
+      fontWeight: 600,
+    }}
+  >
+    Mobile Number
+  </Grid>
+
+  {/* Mobile Input */}
+  <Grid item xs={6}>
+    <TextField
+      fullWidth
+      {...register("mobile", { required: "mobile number is required" })}
+      error={!!errors.contactNo}
+      helperText={errors.contactNo?.message}
+      placeholder="mobile Number"
+    />
+  </Grid>
+</Box>
+{/* Email */}
     <Box
   display={"grid"}
   gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -181,7 +282,10 @@ function AddSupplier() {
     />
   </Grid>
 </Box>
-     <Box
+
+{/* Whatsapp no */}
+
+         <Box
   display={"grid"}
   gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
   gap={3}
@@ -190,7 +294,7 @@ function AddSupplier() {
   alignItems={"center"}
   justifyContent={"center"}
 >
-  {/* Contact Number Label */}
+  {/* whatsapp Number Label */}
   <Grid
     sx={{
       width: "100%",
@@ -199,54 +303,53 @@ function AddSupplier() {
       fontWeight: 600,
     }}
   >
-    Contact Number
+   whatsapp Number
   </Grid>
 
-  {/* Contact Number Input */}
+  {/* whatsapp Number Input */}
   <Grid item xs={6}>
     <TextField
       fullWidth
-      {...register("contactNo", { required: "Contact number is required" })}
+      {...register("whatsapp")}
       error={!!errors.contactNo}
       helperText={errors.contactNo?.message}
-      placeholder="Contact Number"
+      placeholder="whatsapp Number"
     />
   </Grid>
 </Box>
-<Box
-  display={"grid"}
-  gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-  gap={3}
-  mx={"auto"}
-  sx={{ width: { xs: "100%", lg: "50%" } }}
-  alignItems={"center"}
-  justifyContent={"center"}
->
-  {/* Status Label */}
-  <Grid
-    sx={{
-      width: "100%",
-      display: "flex",
-      flexDirection: { xs: "row", md: "row-reverse" },
-      fontWeight: 600,
-    }}
-  >
-    Status
-  </Grid>
-
-  {/* Status Input */}
-  <Grid item xs={6}>
-    <TextField
-      select
-      fullWidth
-      defaultValue="Active"
-      {...register("status")}
+  {/* viber */}
+    <Box
+      display={"grid"}
+      gridTemplateColumns={{ xs: "1fr", md: "1fr  2fr" }}
+      spacing={3}
+      gap={3}
+      mx={"auto"}
+      sx={{width: { xs: "100%",  lg: "50%" }, }} 
+      alignItems={"center"}
+      justifyContent={"center"}
     >
-      <MenuItem value="Active">Active</MenuItem>
-      <MenuItem value="Inactive">Inactive</MenuItem>
-    </TextField>
-  </Grid>
-</Box>
+   <Grid variant="subtitle1"
+              fontWeight={600}
+              sx={{ width: "100%" }}
+            
+              display={"flex"}
+              flexDirection={{xs:"row",md:"row-reverse"}} >
+            
+              Viber
+           
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              {...register("viber")}
+              error={!!errors.viber}
+              helperText={errors.viber?.message}
+              placeholder="viber"
+            />
+          </Grid>
+
+    </Box>
+
 <Box
   display={"grid"}
   gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -265,7 +368,7 @@ function AddSupplier() {
       fontWeight: 600,
     }}
   >
-    Other Details
+    Address
   </Grid>
 
   {/* Other Details Input */}
@@ -275,8 +378,8 @@ function AddSupplier() {
       multiline
       rows={4}
       
-      {...register("otherDetails")}
-      placeholder="Additional information about the supplier..."
+      {...register("address")}
+      placeholder="Address"
     />
   </Grid>
 </Box>

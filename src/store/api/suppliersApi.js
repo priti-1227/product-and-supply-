@@ -37,7 +37,7 @@ export const suppliersApi = createApi({
     // POST create new supplier
     createSupplier: builder.mutation({
       query: (newSupplier) => ({
-        url: "/suppliers",
+        url: "/suppliers/",
         method: "POST",
         body: newSupplier,
       }),
