@@ -6,31 +6,37 @@ export const suppliersApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: [TAG_TYPES.SUPPLIERS, TAG_TYPES.DASHBOARD],
   endpoints: (builder) => ({
-    // GET all suppliers with pagination and search
-    getSuppliers: builder.query({
-      query: ({ page = 1, limit = 10, search = "", sortBy = "createdAt", order = "desc" }) => ({
-        url: "/suppliers",
-        params: { page, limit, search, sortBy, order },
-      }),
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.data.map(({ id }) => ({ type: TAG_TYPES.SUPPLIERS, id })),
-              { type: TAG_TYPES.SUPPLIERS, id: "LIST" },
-            ]
-          : [{ type: TAG_TYPES.SUPPLIERS, id: "LIST" }],
-      // Transform response to match frontend needs
-      transformResponse: (response) => ({
-        data: response.suppliers || response.data || [],
-        total: response.total || 0,
-        page: response.page || 1,
-        totalPages: response.totalPages || 1,
-      }),
-    }),
+ // GET all suppliers
+getSuppliers: builder.query({
+
+  query: ({ page = 1, limit = 10, search = "" }) => ({
+    url: "/suppliers/",
+    
+    params: { page, limit, search },
+  }),
+
+  providesTags: (result) =>
+    result
+      ? [
+          ...result.data.map(({ id }) => ({ type: TAG_TYPES.SUPPLIERS, id })),
+          { type: TAG_TYPES.SUPPLIERS, id: "LIST" },
+        ]
+      : [{ type: TAG_TYPES.SUPPLIERS, id: "LIST" }],
+      
+  
+  transformResponse: (response) => {
+    return {
+     
+      data: response.results || [],
+   
+      total: response.count || 0,
+    };
+  },
+}),
 
     // GET single supplier by ID
     getSupplierById: builder.query({
-      query: (id) => `/suppliers/${id}`,
+      query: (id) => `/suppliers/${id}/`,
       providesTags: (result, error, id) => [{ type: TAG_TYPES.SUPPLIERS, id }],
     }),
 
@@ -65,7 +71,7 @@ export const suppliersApi = createApi({
     // PUT update supplier
     updateSupplier: builder.mutation({
       query: ({ id, ...patch }) => ({
-        url: `/suppliers/${id}`,
+        url: `/suppliers/${id}/`,
         method: "PUT",
         body: patch,
       }),
@@ -91,7 +97,7 @@ export const suppliersApi = createApi({
     // DELETE supplier
     deleteSupplier: builder.mutation({
       query: (id) => ({
-        url: `/suppliers/${id}`,
+        url: `/suppliers/${id}/`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, id) => [

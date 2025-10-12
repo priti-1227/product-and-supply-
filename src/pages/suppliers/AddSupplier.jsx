@@ -170,9 +170,10 @@ function AddSupplier() {
     <TextField
       fullWidth
       {...register("contact_person", { required: "Contact person is required" })}
-      error={!!errors.contactNo}
-      helperText={errors.contactNo?.message}
+      error={!!errors.contact_person}
+      helperText={errors.contact_person?.message}
       placeholder="Contact person "
+      
     />
   </Grid>
 </Box>
@@ -236,8 +237,8 @@ function AddSupplier() {
     <TextField
       fullWidth
       {...register("mobile", { required: "mobile number is required" })}
-      error={!!errors.contactNo}
-      helperText={errors.contactNo?.message}
+      error={!!errors.mobile}
+      helperText={errors.mobile?.message}
       placeholder="mobile Number"
     />
   </Grid>
@@ -378,8 +379,10 @@ function AddSupplier() {
       multiline
       rows={4}
       
-      {...register("address")}
+      {...register("address", { required: "Address is required" })}
       placeholder="Address"
+       error={!!errors.address}
+              helperText={errors.address?.message}
     />
   </Grid>
 </Box>
