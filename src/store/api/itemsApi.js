@@ -18,7 +18,7 @@ export const itemsApi = createApi({
         sortBy = "createdAt",
         order = "desc",
       }) => ({
-        url: "/items",
+        url: "/products/",
         params: { page, limit, search, supplierId, minPrice, maxPrice, sortBy, order },
       }),
       providesTags: (result) =>
@@ -35,16 +35,16 @@ export const itemsApi = createApi({
 
     // GET single item by ID
     getItemById: builder.query({
-      query: (id) => `/items/${id}`,
+      query: (id) => `/products/${id}`,
       providesTags: (result, error, id) => [{ type: TAG_TYPES.ITEMS, id }],
     }),
 
     // POST create new item
     createItem: builder.mutation({
-      query: (newItem) => ({
-        url: "/items",
+      query: (formData) => ({
+        url: "/products/",
         method: "POST",
-        body: newItem,
+        body: formData,
       }),
       invalidatesTags: [
         { type: TAG_TYPES.ITEMS, id: "LIST" },
@@ -55,7 +55,7 @@ export const itemsApi = createApi({
     // PUT update item
     updateItem: builder.mutation({
       query: ({ id, ...patch }) => ({
-        url: `/items/${id}`,
+        url: `/products/${id}`,
         method: "PUT",
         body: patch,
       }),
@@ -68,7 +68,7 @@ export const itemsApi = createApi({
     // DELETE item
     deleteItem: builder.mutation({
       query: (id) => ({
-        url: `/items/${id}`,
+        url: `/products/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, id) => [
@@ -81,7 +81,7 @@ export const itemsApi = createApi({
     // BULK DELETE items
     bulkDeleteItems: builder.mutation({
       query: (ids) => ({
-        url: "/items/bulk-delete",
+        url: "/products/bulk-delete",
         method: "POST",
         body: { ids },
       }),
@@ -94,7 +94,7 @@ export const itemsApi = createApi({
     // POST upload item images
     uploadItemImages: builder.mutation({
       query: ({ itemId, formData }) => ({
-        url: `/items/${itemId}/images`,
+        url: `/products/${itemId}/images`,
         method: "POST",
         body: formData,
         // Don't set Content-Type for FormData - browser will set it with boundary
@@ -108,7 +108,7 @@ export const itemsApi = createApi({
 
     // GET items by supplier
     getItemsBySupplier: builder.query({
-      query: (supplierId) => `/items/supplier/${supplierId}`,
+      query: (supplierId) => `/products/supplier/${supplierId}`,
       providesTags: (result, error, supplierId) => [{ type: TAG_TYPES.ITEMS, id: `SUPPLIER_${supplierId}` }],
     }),
   }),
