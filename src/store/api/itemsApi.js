@@ -7,31 +7,25 @@ export const itemsApi = createApi({
   tagTypes: [TAG_TYPES.ITEMS, TAG_TYPES.DASHBOARD],
   endpoints: (builder) => ({
     // GET all items with filters
-    getItems: builder.query({
-      query: ({
-        page = 1,
-        limit = 10,
-        search = "",
-        supplierId = null,
-        minPrice = null,
-        maxPrice = null,
-        sortBy = "createdAt",
-        order = "desc",
-      }) => ({
-        url: "/products/",
-        params: { page, limit, search, supplierId, minPrice, maxPrice, sortBy, order },
-      }),
-      providesTags: (result) =>
-        result
-          ? [...result.data.map(({ id }) => ({ type: TAG_TYPES.ITEMS, id })), { type: TAG_TYPES.ITEMS, id: "LIST" }]
-          : [{ type: TAG_TYPES.ITEMS, id: "LIST" }],
-      transformResponse: (response) => ({
-        data: response.items || response.data || [],
-        total: response.total || 0,
-        page: response.page || 1,
-        totalPages: response.totalPages || 1,
-      }),
-    }),
+ getItems: builder.query({
+  query: ({ page = 1, limit = 10, search = "" }) => ({
+    url: "/products/",
+    params: { page, limit, search },
+  }),
+
+  providesTags: (result) =>
+    result
+      ? [...result.data.map(({ id }) => ({ type: TAG_TYPES.ITEMS, id })), { type: TAG_TYPES.ITEMS, id: "LIST" }]
+      : [{ type: TAG_TYPES.ITEMS, id: "LIST" }],
+
+  // --- THIS IS THE CORRECTED PART ---
+  transformResponse: (response) => ({
+    // Get the array from the 'results' key
+    data: response.results || [],
+    // Get the total from the 'count' key
+    total: response.count || 0,
+  }),
+}),
 
     // GET single item by ID
     getItemById: builder.query({
@@ -55,7 +49,7 @@ export const itemsApi = createApi({
     // PUT update item
     updateItem: builder.mutation({
       query: ({ id, ...patch }) => ({
-        url: `/products/${id}`,
+        url: `/products/${id}/`,
         method: "PUT",
         body: patch,
       }),

@@ -33,7 +33,7 @@ import SearchIcon from "@mui/icons-material/Search"
 import { useGetItemsQuery, useDeleteItemMutation } from "../../store/api/itemsApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
-const USE_DUMMY_DATA = true;
+const USE_DUMMY_DATA = false;
 
 const initialProducts = [
   { id: 101, uniqueId: "ITM-001", name: "Arduino Uno R3", supplierId: 1, unitPrice: 22.50, wholesalePrice: 20.00, actualPrice: 25.00, origin: "Italy" },
@@ -118,21 +118,21 @@ function ItemsList() {
   }
 // uncomment for dummy
 
-//   if (isError) {
-//     return (
-//       <Box>
-//         <Alert severity="error" sx={{ mb: 2 }}>
-//           {handleApiError(error)}
-//         </Alert>
-//         <Button variant="contained" onClick={refetch}>
-//           Retry
-//         </Button>
-//       </Box>
-//     )
-//   }
+  if (isError) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {handleApiError(error)}
+        </Alert>
+        <Button variant="contained" onClick={refetch}>
+          Retry
+        </Button>
+      </Box>
+    )
+  }
 
-  // const items = data?.data || []
-  const items = localItems || []
+  const items = data?.data || []
+  // const items = localItems || [] /// for dummy
   const totalCount = data?.total || 0
 
   return (
@@ -175,63 +175,79 @@ function ItemsList() {
           />
         </Box> */}
 
-        <TableContainer sx={{ maxHeight: 300 }}>
-          <Table stickyHeader aria-label="sticky table">
-            <TableHead sx={{letterSpacing: "0.05em"}}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center", bgcolor:"primary.light",letterSpacing: "0.05em", }}>Item ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center",}}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center", bgcolor:"primary.light",letterSpacing: "0.05em",}}>Supplier</TableCell>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center", }}>Unit Price</TableCell>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center", bgcolor:"primary.light",letterSpacing: "0.05em",}}>Wholesale</TableCell>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center",}}>Actual Price</TableCell>
-                <TableCell sx={{ fontWeight: 600 ,textAlign:"center", bgcolor:"primary.light",letterSpacing: "0.05em",}}>Origin</TableCell>
-                <TableCell sx={{ fontWeight: 600,textAlign:"center", }} align="right">
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                    <Typography color="text.secondary">No items found</Typography>
-                  </TableCell>
-                </TableRow>
+      <TableContainer sx={{ maxHeight: 400 }}>
+  <Table stickyHeader aria-label="sticky table">
+    <TableHead sx={{ letterSpacing: "0.05em" }}>
+      <TableRow>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Item ID</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", whiteSpace: "nowrap" }}>Name</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Supplier</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", whiteSpace: "nowrap" }}>Description</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Wholesale Price</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", whiteSpace: "nowrap" }}>Retail Price</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Unit</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", whiteSpace: "nowrap" }}>Origin</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Available</TableCell>
+        {/* <TableCell sx={{ fontWeight: 600, textAlign: "center", whiteSpace: "nowrap" }}>Image</TableCell> */}
+        <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Created At</TableCell>
+        <TableCell sx={{ fontWeight: 600, textAlign: "center" }}>Actions</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {items.length === 0 ? (
+        <TableRow>
+          {/* Updated colSpan to match the new total number of columns */}
+          <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+            <Typography color="text.secondary">No items found</Typography>
+          </TableCell>
+        </TableRow>
+      ) : (
+        items.map((item) => (
+          <TableRow key={item.id} hover>
+            <TableCell align="center">{item.id}</TableCell>
+            <TableCell>{item.name || "N/A"}</TableCell>
+            <TableCell>{item.supplier_name || "N/A"}</TableCell>
+            <TableCell sx={{ minWidth: 200 }}>{item.description || "N/A"}</TableCell>
+            <TableCell align="center">{`${item.currency} ${item.wholesale_price}`}</TableCell>
+            <TableCell align="center">{`${item.currency} ${item.retail_price}`}</TableCell>
+            <TableCell align="center">{item.unit || "N/A"}</TableCell>
+            <TableCell>{item.country_of_origin || "N/A"}</TableCell>
+            <TableCell align="center">
+              <Chip
+                label={item.is_available ? "Yes" : "No"}
+                color={item.is_available ? "success" : "error"}
+                size="small"
+              />
+            </TableCell>
+            {/* <TableCell align="center">
+              {item.image ? (
+                <a href={item.image} target="_blank" rel="noopener noreferrer">View</a>
               ) : (
-                items.map((item) => (
-                  <TableRow key={item.id} hover>
-                    <TableCell>{item.uniqueId || item.id}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.supplierName || item.supplier}</TableCell>
-                    <TableCell>${item.unitPrice}</TableCell>
-                    <TableCell>${item.wholesalePrice}</TableCell>
-                    {/* <TableCell>
-                      <Chip label={`$${item.actualPrice}`} color="primary" size="small" />
-                    </TableCell> */}
-                    <TableCell>${item.actualPrice}</TableCell>
-                    <TableCell>{item.origin}</TableCell>
-                    <TableCell align="right" >
-                     
-                      <IconButton size="small"  color="primary" onClick={() => navigate(`/items/edit/${item.id}`)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(item)}
-                        disabled={isDeleting}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                     
-                    </TableCell>
-                  </TableRow>
-                ))
+                "None"
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </TableCell> */}
+            <TableCell align="center">{new Date(item.created_at).toLocaleDateString()}</TableCell>
+            <TableCell align="center">
+              <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+              <IconButton size="small" color="primary" onClick={() => navigate(`/items/edit/${item.id}`)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleDeleteClick(item)}
+                disabled={isDeleting}
+              >
+                <DeleteIcon />
+              </IconButton>
+              </Box>
+            </TableCell>
+          </TableRow>
+        ))
+      )}
+    </TableBody>
+  </Table>
+</TableContainer>
 
         <TablePagination
           component="div"
