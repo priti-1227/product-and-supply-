@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form";
 import {
   Box,
   Typography,
@@ -12,17 +12,19 @@ import {
   Grid,
   MenuItem,
   CircularProgress,
+  Checkbox, // <-- Make sure Checkbox is imported
 } from "@mui/material"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 import SaveIcon from "@mui/icons-material/Save"
 import { useGetItemByIdQuery, useUpdateItemMutation } from "../../store/api/itemsApi"
 import { useGetSuppliersQuery } from "../../store/api/suppliersApi"
 import { useNotification } from "../../hooks/useNotification"
+import { handleApiError } from "../../utils/errorHandler"
 
 function EditItem() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const { showSuccess, showError } = useNotification()
+  const { showNotification } = useNotification()
 
   const { data: item, isLoading: isLoadingItem } = useGetItemByIdQuery(id)
   const { data: suppliersData, isLoading: isLoadingSuppliers } = useGetSuppliersQuery({ page: 1, limit: 100 })
@@ -33,35 +35,57 @@ function EditItem() {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm()
+    control,
+    setValue, // <-- Get setValue for the image input
+  } = useForm({  defaultValues: {
+    supplier: '', // <-- This ensures the initial value is never undefined
+    name: '',
+    description: '',
+    // Initialize other fields as well for consistency
+    packing: '',
+    currency: '',
+    wholesale_price: '',
+    retail_price: '',
+    unit: '',
+    country_of_origin: '',
+    is_available: false,
+  }})
 
   React.useEffect(() => {
-    if (item) {
+    if (item && suppliersData) {
       reset({
+        supplier: item.supplier,
         name: item.name,
-        uniqueNo: item.uniqueNo,
-        supplierId: item.supplierId,
-        packaging: item.packaging,
-        unitPrice: item.unitPrice,
-        wholesalePrice: item.wholesalePrice,
-        actualPrice: item.actualPrice,
-        origin: item.origin,
-        sku: item.sku,
         description: item.description,
-        category: item.category,
-        stock: item.stock,
-        minStock: item.minStock,
+        packing: item.packing,
+        currency: item.currency,
+        wholesale_price: item.wholesale_price,
+        retail_price: item.retail_price,
+        unit: item.unit,
+        country_of_origin: item.country_of_origin,
+        is_available: item.is_available,
       })
     }
-  }, [item, reset])
+  }, [item, suppliersData, reset]) // <-- Updated dependency array
 
   const onSubmit = async (data) => {
+    // For file uploads on edit, you'd need FormData again.
+    // const formData = new FormData();
+    // Object.keys(data).forEach(key => {
+    //     // Only append the image if it's a new file object
+    //     if (key === 'image' && data.image instanceof File) {
+    //         formData.append('image', data.image);
+    //     } else if (key !== 'image' && data[key] != null) {
+    //         formData.append(key, data[key]);
+    //     }
+    // });
+
     try {
       await updateItem({ id, ...data }).unwrap()
-      showSuccess("Item updated successfully")
+      showNotification({ message: "Item updated successfully", type: "success" })
       navigate("/items")
-    } catch (error) {
-      showError(error?.data?.message || "Failed to update item")
+    } catch (err) {
+      handleApiError(err, showNotification)
     }
   }
 
@@ -74,6 +98,7 @@ function EditItem() {
   }
 
   const suppliers = suppliersData?.data || []
+  console.log(suppliers,"test suppliers")
 
   return (
     <Box>
@@ -86,199 +111,144 @@ function EditItem() {
           Edit Item
         </Typography>
 
+        {/* 2. THIS IS THE COPIED AND ADAPTED FORM */}
         <form style={{ width: "100%" }} onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
-            {/* Item Name */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-              alignItems="center"
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Item Name
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  {...register("name", { required: "Name is required" })}
-                  error={!!errors.name}
-                  helperText={errors.name?.message}
-                  placeholder="Item Name"
-                />
-              </Grid>
-            </Box>
-
-            {/* Unique ID */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-              alignItems="center"
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Unique ID
-              </Grid>
-              <Grid item xs={6}>
-                <TextField fullWidth {...register("uniqueNo")} disabled />
-              </Grid>
-            </Box>
-
             {/* Supplier */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-              alignItems="center"
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Supplier
-              </Grid>
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Supplier</Grid>
               <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  select
-                  {...register("supplierId", { required: "Supplier is required" })}
-                  error={!!errors.supplierId}
-                  helperText={errors.supplierId?.message}
-                >
-                  {suppliers.map((supplier) => (
-                    <MenuItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Controller
+  name="supplier"
+  control={control}
+  rules={{ required: "Supplier is required" }}
+  render={({ field }) => (
+    <TextField
+      {...field}
+      fullWidth
+      select
+      // label="Supplier"
+      error={!!errors.supplier}
+      helperText={errors.supplier?.message}
+    >
+      {/* Add a placeholder option in case the value is empty */}
+      <MenuItem value="">
+        <em>None</em>
+      </MenuItem>
+      {suppliers.map((supplier) => (
+        <MenuItem key={supplier.id} value={supplier.id}>
+          {supplier.name}
+        </MenuItem>
+      ))}
+    </TextField>
+  )}
+/>
               </Grid>
             </Box>
 
-            {/* Packaging */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Packaging
-              </Grid>
+            {/* Item Name */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Item Name</Grid>
               <Grid item xs={6}>
-                <TextField fullWidth {...register("packaging")} placeholder="e.g., Box of 10" />
-              </Grid>
-            </Box>
-
-            {/* Unit Price */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Unit Price
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  {...register("unitPrice", { required: "Unit price is required" })}
-                  error={!!errors.unitPrice}
-                  helperText={errors.unitPrice?.message}
-                />
-              </Grid>
-            </Box>
-
-            {/* Wholesale Price */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Wholesale Price
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  {...register("wholesalePrice", { required: "Wholesale price is required" })}
-                  error={!!errors.wholesalePrice}
-                  helperText={errors.wholesalePrice?.message}
-                />
-              </Grid>
-            </Box>
-
-            {/* Actual Price */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Actual Price
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  {...register("actualPrice", { required: "Actual price is required" })}
-                  error={!!errors.actualPrice}
-                  helperText={errors.actualPrice?.message}
-                />
+                <TextField fullWidth {...register("name", { required: "Item name is required" })} error={!!errors.name} helperText={errors.name?.message} placeholder="Item Name"/>
               </Grid>
             </Box>
 
             {/* Description */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-            >
-              <Grid sx={{ display: "flex", flexDirection: "row-reverse", fontWeight: 600 }}>
-                Description
-              </Grid>
+            <Box display={"grid"} gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx={"auto"} sx={{ width: { xs: "100%", lg: "50%" } }} alignItems={"center"} justifyContent={"center"}>
+              <Grid sx={{ width: "100%", display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Description</Grid>
               <Grid item xs={6}>
-                <TextField fullWidth multiline rows={4} {...register("description")} placeholder="Item description..." />
+                <TextField fullWidth multiline rows={4} {...register("description")} placeholder="Description" error={!!errors.description} helperText={errors.description?.message}/>
               </Grid>
             </Box>
 
+            {/* Packing */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Packing</Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth {...register("packing")} error={!!errors.packing} helperText={errors.packing?.message} placeholder="e.g., Box of 10, Pack of 50"/>
+              </Grid>
+            </Box>
+
+            {/* Currency */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Currency</Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth type="text" maxLength={3} placeholder="e.g., USD, EUR" {...register("currency", { required: "Currency is required" })} error={!!errors.currency} helperText={errors.currency?.message}/>
+              </Grid>
+            </Box>
+
+            {/* Wholesale Price */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Wholesale Price</Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth type="text" {...register("wholesale_price", { required: "Wholesale price is required" })} error={!!errors.wholesale_price} helperText={errors.wholesale_price?.message}/>
+              </Grid>
+            </Box>
+
+            {/* Retail price */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Retail price</Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth type="text" {...register("retail_price", { required: "Retail price is required" })} error={!!errors.retail_price} helperText={errors.retail_price?.message}/>
+              </Grid>
+            </Box>
+
+            {/* Unit */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Unit</Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth type="text" {...register("unit", { required: "Unit is required" })} error={!!errors.unit} helperText={errors.unit?.message}/>
+              </Grid>
+            </Box>
+
+            {/* Country of origin */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Country of origin</Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth {...register("country_of_origin")} placeholder="Country of origin" />
+              </Grid>
+            </Box>
+
+            {/* Upload Image */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Upload Image</Grid>
+              <Grid item xs={6}>
+                 {item?.image && <img src={item.image} alt="Current item" style={{ width: 100, height: 100, marginBottom: 10, objectFit: 'cover' }} />}
+ <TextField
+      type="file"
+      accept="image/*"
+      // {...register("image")}
+      onChange={(e) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    setValue("image", file); // Stores the file object, not a Base64 string
+  }}
+      style={{ width: "100%" }}
+    />              </Grid>
+            </Box>
+
+            {/* Is Available */}
+            <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Is Available</Grid>
+              <Grid item xs={6}>
+                <Checkbox {...register("is_available")} />
+              </Grid>
+            </Box>
+            
             {/* Buttons */}
-            <Box
-              display="grid"
-              gridTemplateColumns="1fr"
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-            >
+            <Box display="grid" gridTemplateColumns="1fr" gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }}>
               <Grid item>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, width: "100%" }}>
                   <Button variant="outlined" onClick={() => navigate("/items")} disabled={isUpdating}>
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
-                    disabled={isUpdating}
-                  >
+                  <Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={isUpdating}>
                     {isUpdating ? "Updating..." : "Update Item"}
                   </Button>
                 </Box>
               </Grid>
             </Box>
+
           </Grid>
         </form>
       </Paper>

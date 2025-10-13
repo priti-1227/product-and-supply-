@@ -7,44 +7,38 @@ export const itemsApi = createApi({
   tagTypes: [TAG_TYPES.ITEMS, TAG_TYPES.DASHBOARD],
   endpoints: (builder) => ({
     // GET all items with filters
-    getItems: builder.query({
-      query: ({
-        page = 1,
-        limit = 10,
-        search = "",
-        supplierId = null,
-        minPrice = null,
-        maxPrice = null,
-        sortBy = "createdAt",
-        order = "desc",
-      }) => ({
-        url: "/items",
-        params: { page, limit, search, supplierId, minPrice, maxPrice, sortBy, order },
-      }),
-      providesTags: (result) =>
-        result
-          ? [...result.data.map(({ id }) => ({ type: TAG_TYPES.ITEMS, id })), { type: TAG_TYPES.ITEMS, id: "LIST" }]
-          : [{ type: TAG_TYPES.ITEMS, id: "LIST" }],
-      transformResponse: (response) => ({
-        data: response.items || response.data || [],
-        total: response.total || 0,
-        page: response.page || 1,
-        totalPages: response.totalPages || 1,
-      }),
-    }),
+ getItems: builder.query({
+  query: ({ page = 1, limit = 10, search = "" }) => ({
+    url: "/products/",
+    params: { page, limit, search },
+  }),
+
+  providesTags: (result) =>
+    result
+      ? [...result.data.map(({ id }) => ({ type: TAG_TYPES.ITEMS, id })), { type: TAG_TYPES.ITEMS, id: "LIST" }]
+      : [{ type: TAG_TYPES.ITEMS, id: "LIST" }],
+
+  // --- THIS IS THE CORRECTED PART ---
+  transformResponse: (response) => ({
+    // Get the array from the 'results' key
+    data: response.results || [],
+    // Get the total from the 'count' key
+    total: response.count || 0,
+  }),
+}),
 
     // GET single item by ID
     getItemById: builder.query({
-      query: (id) => `/items/${id}`,
+      query: (id) => `/products/${id}`,
       providesTags: (result, error, id) => [{ type: TAG_TYPES.ITEMS, id }],
     }),
 
     // POST create new item
     createItem: builder.mutation({
-      query: (newItem) => ({
-        url: "/items",
+      query: (formData) => ({
+        url: "/products/",
         method: "POST",
-        body: newItem,
+        body: formData,
       }),
       invalidatesTags: [
         { type: TAG_TYPES.ITEMS, id: "LIST" },
@@ -55,7 +49,7 @@ export const itemsApi = createApi({
     // PUT update item
     updateItem: builder.mutation({
       query: ({ id, ...patch }) => ({
-        url: `/items/${id}`,
+        url: `/products/${id}/`,
         method: "PUT",
         body: patch,
       }),
@@ -68,7 +62,7 @@ export const itemsApi = createApi({
     // DELETE item
     deleteItem: builder.mutation({
       query: (id) => ({
-        url: `/items/${id}`,
+        url: `/products/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, id) => [
@@ -81,7 +75,7 @@ export const itemsApi = createApi({
     // BULK DELETE items
     bulkDeleteItems: builder.mutation({
       query: (ids) => ({
-        url: "/items/bulk-delete",
+        url: "/products/bulk-delete",
         method: "POST",
         body: { ids },
       }),
@@ -94,7 +88,7 @@ export const itemsApi = createApi({
     // POST upload item images
     uploadItemImages: builder.mutation({
       query: ({ itemId, formData }) => ({
-        url: `/items/${itemId}/images`,
+        url: `/products/${itemId}/images`,
         method: "POST",
         body: formData,
         // Don't set Content-Type for FormData - browser will set it with boundary
@@ -108,7 +102,7 @@ export const itemsApi = createApi({
 
     // GET items by supplier
     getItemsBySupplier: builder.query({
-      query: (supplierId) => `/items/supplier/${supplierId}`,
+      query: (supplierId) => `/products/supplier/${supplierId}`,
       providesTags: (result, error, supplierId) => [{ type: TAG_TYPES.ITEMS, id: `SUPPLIER_${supplierId}` }],
     }),
   }),

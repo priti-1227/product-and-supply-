@@ -2,30 +2,32 @@
 
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
-import { Box, Typography, Paper, TextField, Button, Grid, MenuItem } from "@mui/material"
+import { Box, Typography, Paper, TextField, Button, Grid, MenuItem, Checkbox } from "@mui/material"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 import SaveIcon from "@mui/icons-material/Save"
 import { useCreateItemMutation } from "../../store/api/itemsApi"
 import { useGetSuppliersQuery } from "../../store/api/suppliersApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
-const USE_DUMMY_DATA = true;
+const USE_DUMMY_DATA = false;
 function AddItem() {
   const navigate = useNavigate()
   const { showNotification } = useNotification()
 
   const { data: suppliersData } = useGetSuppliersQuery({ page: 1, limit: 100 })
   const suppliers = suppliersData?.data || []
+  console.log(suppliers,"test suppliers")
 
   const [createItem, { isLoading }] = useCreateItemMutation()
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors },setValue
   } = useForm()
   //  const [suppliers, setSuppliers] = useState([]);
-   
+
+
 
   const onSubmit = async (data) => {
      if (USE_DUMMY_DATA) {
@@ -50,6 +52,17 @@ function AddItem() {
         console.error(err);
       }
     } else {
+        const formData = new FormData();
+
+  // 2. Append all form fields.
+  Object.keys(data).forEach(key => {
+    if (key === 'image' && data[key]) {
+      // Append the actual file object
+      formData.append('image', data.image);
+    } else if (key !== 'image' && data[key] != null) {
+      formData.append(key, data[key]);
+    }
+  });
     try {
       await createItem(data).unwrap()
       showNotification({
@@ -75,6 +88,38 @@ function AddItem() {
 
         <form style={{ width: "100%" }} onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={3}>
+              {/* Supplier */}
+            <Box
+              display="grid"
+              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
+              gap={3}
+              mx="auto"
+              sx={{ width: { xs: "100%", lg: "50%" } }}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
+                Supplier
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  select
+                  defaultValue=""
+                  {...register("supplier",{ required: "Supplier is required" }
+                   
+                    )}
+                  error={!!errors.supplier}
+                  helperText={errors.supplier?.message}
+                >
+                  {suppliers.map((supplier) => (
+                    <MenuItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Box>
 
             {/* Item Name */}
             <Box
@@ -99,32 +144,44 @@ function AddItem() {
                 />
               </Grid>
             </Box>
-
-            {/* Unique ID */}
+            {/* description */}
             <Box
-              display="grid"
+              display={"grid"}
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
               gap={3}
-              mx="auto"
+              mx={"auto"}
               sx={{ width: { xs: "100%", lg: "50%" } }}
-              alignItems="center"
-              justifyContent="center"
+              alignItems={"center"}
+              justifyContent={"center"}
             >
-              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Unique ID
+              {/* Other Details Label */}
+              <Grid
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: { xs: "row", md: "row-reverse" },
+                  fontWeight: 600,
+                }}
+              >
+                Description
               </Grid>
+            
+              {/* Other Details Input */}
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  {...register("uniqueId", { required: "Unique ID is required" })}
-                  error={!!errors.uniqueId}
-                  helperText={errors.uniqueId?.message}
-                  placeholder="ITM001"
+                  multiline
+                  rows={4}
+                  
+                  {...register("description")}
+                  placeholder="Description"
+                   error={!!errors.description}
+                          helperText={errors.description?.message}
                 />
               </Grid>
             </Box>
 
-            {/* Supplier */}
+            {/* Packing */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -135,51 +192,21 @@ function AddItem() {
               justifyContent="center"
             >
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Supplier
+               Packing
               </Grid>
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  select
-                  defaultValue=""
-                  {...register("supplierId",
-                    //  { required: "Supplier is required" }
-                    )}
-                  error={!!errors.supplierId}
-                  helperText={errors.supplierId?.message}
-                >
-                  {suppliers.map((supplier) => (
-                    <MenuItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            </Box>
-
-            {/* Packaging */}
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
-              gap={3}
-              mx="auto"
-              sx={{ width: { xs: "100%", lg: "50%" } }}
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Packaging
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  {...register("packaging")}
+                  {...register("packing")}
+                  error={!!errors.packing}
+                  helperText={errors.packing?.message}
                   placeholder="e.g., Box of 10, Pack of 50"
                 />
               </Grid>
             </Box>
 
-            {/* Unit Price */}
+
+              {/* Currency */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -190,21 +217,23 @@ function AddItem() {
               justifyContent="center"
             >
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Unit Price
+               Currency
               </Grid>
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  type="number"
-                  {...register("unitPrice", { required: "Unit price is required" })}
-                  error={!!errors.unitPrice}
-                  helperText={errors.unitPrice?.message}
-                  InputProps={{ startAdornment: "$" }}
+                  type="text"
+                  maxLength={3}
+                  placeholder="e.g., USD, EUR"
+                  {...register("currency", { required: "Currency is required" })}
+                  error={!!errors.currency}
+                  helperText={errors.currency?.message}
+                  
                 />
               </Grid>
             </Box>
 
-            {/* Wholesale Price */}
+             {/* Wholesale Price */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -220,16 +249,16 @@ function AddItem() {
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  type="number"
-                  {...register("wholesalePrice", { required: "Wholesale price is required" })}
-                  error={!!errors.wholesalePrice}
-                  helperText={errors.wholesalePrice?.message}
-                  InputProps={{ startAdornment: "$" }}
+                  type="text"
+                  {...register("wholesale_price", { required: "Wholesale price is required" })}
+                  error={!!errors.wholesale_price}
+                  helperText={errors.wholesale_price?.message}
+                  // InputProps={{ startAdornment: "$" }}
                 />
               </Grid>
             </Box>
 
-            {/* Actual Price */}
+              {/* Retail price */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -240,21 +269,23 @@ function AddItem() {
               justifyContent="center"
             >
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Actual Price
+                Retail price
               </Grid>
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  type="number"
-                  {...register("actualPrice", { required: "Actual price is required" })}
-                  error={!!errors.actualPrice}
-                  helperText={errors.actualPrice?.message}
-                  InputProps={{ startAdornment: "$" }}
+                  type="text"
+                  {...register("retail_price", { required: "Retail price is required" })}
+                  error={!!errors.retail_price}
+                  helperText={errors.retail_price?.message}
+                  // InputProps={{ startAdornment: "$" }}
                 />
               </Grid>
             </Box>
 
-            {/* Origin */}
+           
+
+            {/* Unit  */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -265,14 +296,25 @@ function AddItem() {
               justifyContent="center"
             >
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Origin
+                Unit 
               </Grid>
               <Grid item xs={6}>
-                <TextField fullWidth {...register("origin")} placeholder="Country of origin" />
+                <TextField
+                  fullWidth
+                  type="text"
+                  {...register("unit", { required: "Unit is required" })}
+                  error={!!errors.unit}
+                  helperText={errors.unit?.message}
+                  // InputProps={{ startAdornment: "$" }}
+                />
               </Grid>
             </Box>
 
-            {/* QR/ID Code */}
+           
+
+           
+
+            {/* Country of origin */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -283,12 +325,13 @@ function AddItem() {
               justifyContent="center"
             >
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                QR/ID Code
+                Country of origin
               </Grid>
               <Grid item xs={6}>
-                <TextField fullWidth {...register("qrId")} placeholder="Barcode or QR code" />
+                <TextField fullWidth {...register("country_of_origin")} placeholder="Country of origin" />
               </Grid>
             </Box>
+
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -313,13 +356,18 @@ function AddItem() {
     <TextField
       type="file"
       accept="image/*"
-      {...register("imageFile")}
+      // {...register("image")}
+      onChange={(e) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    setValue("image", file); // Stores the file object, not a Base64 string
+  }}
       style={{ width: "100%" }}
     />
+     
   </Grid>
             </Box>
 
-            {/* Description */}
+            {/* Is Available */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -330,10 +378,10 @@ function AddItem() {
               justifyContent="center"
             >
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
-                Description
+                Is Available
               </Grid>
               <Grid item xs={6}>
-                <TextField fullWidth multiline rows={4} {...register("description")} placeholder="Detailed description of the item..." />
+                <Checkbox fullWidth   {...register("is_available")}  />
               </Grid>
             </Box>
 
