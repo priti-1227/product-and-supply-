@@ -23,7 +23,7 @@ const menuItems = [
   { text: "Suppliers", icon: <BusinessIcon />, path: "/suppliers" },
   { text: "Items", icon: <InventoryIcon />, path: "/items" },
   { text: "Supplier List", icon: <ListAltIcon />, path: "/supplier-list" },
-  // { text: "Quotations", icon: <DescriptionIcon />, path: "/quotations" },
+  { text: "Quotations", icon: <DescriptionIcon />, path: "/quotations" },
 ]
 
 function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {

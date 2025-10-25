@@ -10,6 +10,7 @@ import MainLayout from "./components/layout/MainLayout"
 import ItemsList from "./pages/items/ItemsList"
 import AddItem from "./pages/items/AddItem"
 import EditItem from "./pages/items/EditItem"
+import CreateQuotationPage from "./pages/quotations/CreateQuotationPage"
 
 export default function App() {
   return (
@@ -25,7 +26,7 @@ export default function App() {
         <Route path="items/add" element={<AddItem />} />
         <Route path="items/edit/:id" element={<EditItem />} />
       <Route path="supplier-list" element={<SupplierListUpload />} />
-         {/*   <Route path="quotations" element={<Quotations />} /> */}
+           <Route path="quotations" element={<CreateQuotationPage />} />
       </Route>
     </Routes>
     </BrowserRouter>

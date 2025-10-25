@@ -107,6 +107,16 @@ const theme = createTheme({
         },
       },
     },
+    MuiDatePicker: {
+      styleOverrides: {
+        root: {
+          '& .MuiInputBase-root': {
+            padding: 0
+          }
+        }
+      }
+    },
+    
   },
 })
 
