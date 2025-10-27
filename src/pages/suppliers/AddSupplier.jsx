@@ -143,6 +143,38 @@ function AddSupplier() {
           </Grid>
 
     </Box>
+      {/* supplier tax number */}
+    <Box
+      display={"grid"}
+      gridTemplateColumns={{ xs: "1fr", md: "1fr  2fr" }}
+      spacing={3}
+      gap={3}
+      mx={"auto"}
+      sx={{width: { xs: "100%",  lg: "50%" }, }} 
+      alignItems={"center"}
+      justifyContent={"center"}
+    >
+   <Grid variant="subtitle1"
+              fontWeight={600}
+              sx={{ width: "100%" }}
+            
+              display={"flex"}
+              flexDirection={{xs:"row",md:"row-reverse"}} >
+            
+              Supplier Tax No.
+           
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              {...register("tax_number")}
+              error={!!errors.tax_number}
+              helperText={errors.tax_number?.message}
+              placeholder="Supplier Tax No."
+            />
+          </Grid>
+
+    </Box>
     {/* contact person */}
          <Box
   display={"grid"}

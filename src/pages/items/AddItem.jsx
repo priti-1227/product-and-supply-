@@ -9,6 +9,11 @@ import { useCreateItemMutation } from "../../store/api/itemsApi"
 import { useGetSuppliersQuery } from "../../store/api/suppliersApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
+import { Controller } from "react-hook-form";
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'; // Or AdapterMoment, etc.
+import dayjs from 'dayjs'; // Import dayjs
+import { ImageUploadInput } from "../../components/common/ImageUploadInput"
 const USE_DUMMY_DATA = false;
 function AddItem() {
   const navigate = useNavigate()
@@ -23,10 +28,26 @@ function AddItem() {
   const {
     register,
     handleSubmit,
-    formState: { errors },setValue
+    formState: { errors },setValue,control
   } = useForm()
   //  const [suppliers, setSuppliers] = useState([]);
+  const handleImageChange = (e) => {
+    const file = e.target.files ? e.target.files[0] : null;
 
+    if (!file) {
+      // If no file is selected, set the image field to null
+      setValue("image", null);
+      return;
+    }
+
+    // Use FileReader to convert the image to a Base64 string
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      // The result is the Base64 data URL string (e.g., "data:image/png;base64,...")
+      setValue("image", reader.result);
+    };
+  };
 
 
   const onSubmit = async (data) => {
@@ -309,7 +330,93 @@ function AddItem() {
                 />
               </Grid>
             </Box>
+                  {/* Product Date */}
+<Box
+  display="grid"
+  gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
+  gap={3}
+  mx="auto"
+  sx={{ width: { xs: "100%", lg: "50%" } }}
+  alignItems="center" // Align items vertically
+  justifyContent="center"
+>
+  <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
+    Product Date
+  </Grid>
+  <Grid item xs={6}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Controller
+        name="prod_date" 
+        control={control} 
+        render={({ field: { onChange, value, ...restField }, fieldState: { error } }) => (
+          <DatePicker
+            {...restField} 
+            value={value ? dayjs(value) : null} 
+            onChange={(newValue) => {
+              onChange(newValue ? newValue.format('YYYY-MM-DD') : null);
+            }}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                error: !!error,
+                helperText: error?.message,
+                padding:"0px"
+                
+              },
+            }}
+            format="YYYY-MM-DD" 
+            label="" 
+          />
+        )}
+      />
+    </LocalizationProvider>
+  </Grid>
+</Box>  
 
+             {/* Expiry Date */}
+<Box
+  display="grid"
+  gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
+  gap={3}
+  mx="auto"
+  sx={{ width: { xs: "100%", lg: "50%" } }}
+  alignItems="center" // Align items vertically
+  justifyContent="center"
+>
+  <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>
+    Expiry Date
+  </Grid>
+  <Grid item xs={6}>
+    {/* Use Controller to integrate DatePicker with react-hook-form */}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Controller
+        name="expiry_date" // Name to register with react-hook-form
+        control={control} // Pass control object from useForm
+        // Add rules if needed, e.g., required: "Expiry date is required"
+        render={({ field: { onChange, value, ...restField }, fieldState: { error } }) => (
+          <DatePicker
+            {...restField} // Pass down other props like ref
+            value={value ? dayjs(value) : null} // Convert string/Date to dayjs object or null
+            onChange={(newValue) => {
+              // Format the date before setting it in the form state (optional)
+              // Send null if the date is cleared
+              onChange(newValue ? newValue.format('YYYY-MM-DD') : null);
+            }}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                error: !!error,
+                helperText: error?.message,
+              },
+            }}
+            format="YYYY-MM-DD" // Display format
+            label="" // Optional label inside the picker
+          />
+        )}
+      />
+    </LocalizationProvider>
+  </Grid>
+</Box>   
            
 
            
@@ -331,7 +438,7 @@ function AddItem() {
                 <TextField fullWidth {...register("country_of_origin")} placeholder="Country of origin" />
               </Grid>
             </Box>
-
+          {/* Upload Image */}
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
@@ -351,23 +458,21 @@ function AddItem() {
     Upload Image
   </Grid>
 
-  {/* File Input */}
+
   <Grid item xs={6}>
     <TextField
       type="file"
       accept="image/*"
-      // {...register("image")}
-      onChange={(e) => {
-    const file = e.target.files ? e.target.files[0] : null;
-    setValue("image", file); // Stores the file object, not a Base64 string
-  }}
+     
+      onChange={handleImageChange}
       style={{ width: "100%" }}
     />
      
   </Grid>
-            </Box>
+            </Box> 
 
-            {/* Is Available */}
+            {/* <ImageUploadInput name="image" setValue={setValue}  /> */}
+
             <Box
               display="grid"
               gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }}
