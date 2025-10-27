@@ -4,213 +4,302 @@ import {
   Box, Typography, Paper, Button, Grid, Autocomplete, TextField,
   List, ListItem, ListItemText, ListItemIcon, Checkbox, Divider,
   CircularProgress, Alert, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, IconButton
+  TableHead, TableRow, IconButton, Tooltip
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CreateIcon from '@mui/icons-material/Create'; // Or use PictureAsPdfIcon
+import CreateIcon from '@mui/icons-material/Create';
+import EditIcon from '@mui/icons-material/Edit'; // Keep if used elsewhere
 
-
-import { useGetCustomQuotationDataQuery } from '../../store/api/quotationsApi';
-
+// Import hooks
+import {
+  useGetSupplierWiseProductsQuery,
+  useCreateQuotationMutation
+} from '../../store/api/quotationsApi';
+import { useNotification } from '../../hooks/useNotification';
+import { handleApiError } from '../../utils/errorHandler';
+import { generateQuotationPDF } from '../../utils/pdfUtils';
 
 function CreateQuotationPage() {
- const navigate = useNavigate();
-  const [selectedProduct, setSelectedProduct] = useState(null); // The selected product *name*
-  const [suppliersForProduct, setSuppliersForProduct] = useState([]);
-  const [selectedSuppliers, setSelectedSuppliers] = useState(new Set());
+  const navigate = useNavigate();
+  const [selectedSupplierName, setSelectedSupplierName] = useState(null);
+  const [productsForSupplier, setProductsForSupplier] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState(new Set());
   const [quotationItems, setQuotationItems] = useState([]);
-  const [quotationHistory, setQuotationHistory] = useState([]);
+  // --- NEW: State to track the supplier ID for the current quotation ---
+  const [currentQuotationSupplierId, setCurrentQuotationSupplierId] = useState(null);
 
-  // --- Fetch ONLY the custom quotation data ---
+  // --- API Hooks ---
   const {
-    data: customQuotationData, // This holds the object { "Product Name": [...] }
-    isLoading, // Renamed from isLoadingCustomData for simplicity
+    data: supplierWiseData,
+    isLoading,
     isError,
     error,
-  } = useGetCustomQuotationDataQuery();
+  } = useGetSupplierWiseProductsQuery();
+  const [createQuotation, { isLoading: isCreatingQuotation }] = useCreateQuotationMutation();
+  const { showNotification } = useNotification();
 
-  // --- NEW: Derive product names for the Autocomplete ---
-  const productOptions = useMemo(() => {
-    if (!customQuotationData) return [];
-    // Get all keys (product names) from the fetched object
-    return Object.keys(customQuotationData);
-  }, [customQuotationData]);
+  // Derive supplier names for the dropdown
+  const supplierOptions = useMemo(() => {
+    if (!supplierWiseData) return [];
+    return Object.keys(supplierWiseData);
+  }, [supplierWiseData]);
 
-  // --- MODIFIED: useEffect now filters the fetched data locally ---
+  // Update product list when supplier name changes (logic remains same)
   useEffect(() => {
-    if (selectedProduct && customQuotationData) {
-      // 1. Look up the product name in the fetched data object
-      const productSuppliersData = customQuotationData[selectedProduct] || [];
-
-      // 2. Map the results to the format your component expects
-      const formattedSuppliers = productSuppliersData.map(item => ({
-        supplierId: item.supplier,
-        supplierName: item.supplier_name,
-        price: parseFloat(item.retail_price || 0), // Or wholesale_price
-        currency: item.currency || 'USD',
-        // Get mobile if available in this data, otherwise remove or leave as N/A
-        mobile: item.mobile || 'N/A', // Assuming mobile might be in the item details
-      }));
-
-      // Sort by price if needed
-      formattedSuppliers.sort((a, b) => a.price - b.price);
-
-      setSuppliersForProduct(formattedSuppliers);
-      setSelectedSuppliers(new Set()); // Reset selections
+    if (selectedSupplierName && supplierWiseData) {
+      const products = supplierWiseData[selectedSupplierName] || [];
+      setProductsForSupplier(products);
+      setSelectedProducts(new Set()); // Reset product selections for the new supplier
     } else {
-      setSuppliersForProduct([]);
-      setSelectedSuppliers(new Set());
+      setProductsForSupplier([]);
     }
-    // Only depends on the selected product name and the fetched data
-  }, [selectedProduct, customQuotationData]);
+  }, [selectedSupplierName, supplierWiseData]);
 
-  // --- Handlers remain the same ---
-    const handleSupplierSelect = (supplierId) => {
-
-    setSelectedSuppliers(prev => {
-
+  // --- Handlers ---
+  const handleProductSelect = (productId) => {
+    setSelectedProducts(prev => {
       const newSet = new Set(prev);
-
-      if (newSet.has(supplierId)) newSet.delete(supplierId);
-
-      else newSet.add(supplierId);
-
+      if (newSet.has(productId)) newSet.delete(productId);
+      else newSet.add(productId);
       return newSet;
-
     });
-
   };
+
+  // --- MODIFIED: Add to Quotation Handler ---
   const handleAddToQuotation = () => {
-     if (!selectedProduct || selectedSuppliers.size === 0) return;
+    if (!selectedSupplierName || selectedProducts.size === 0) return;
 
-      const productDetails = customQuotationData[selectedProduct]?.[0]; // Get details from first entry
-      if (!productDetails) return; // Should not happen if selectedProduct is valid
+    // Determine the supplier ID from the first selected product
+    const firstProductId = selectedProducts.values().next().value;
+    const firstProductInfo = productsForSupplier.find(p => p.id === firstProductId);
+    if (!firstProductInfo) return; // Should not happen
 
-      const itemsToAdd = [];
-      selectedSuppliers.forEach(supplierId => {
-        const supplierInfo = suppliersForProduct.find(s => s.supplierId === supplierId);
-        if (supplierInfo) {
-          itemsToAdd.push({
-            key: `${productDetails.id}-${supplierId}`, // Use actual product ID if available
-            productId: productDetails.id, // Use actual product ID
-            productName: selectedProduct, // The name is the key
-            supplierId: supplierId,
-            supplierName: supplierInfo.supplierName,
-            price: supplierInfo.price,
-            currency: supplierInfo.currency,
-            unit: productDetails.unit, // Get unit from product details
-          });
-        }
-      });
-        setQuotationItems(prevItems => {
-        const existingKeys = new Set(prevItems.map(item => item.key));
-        const uniqueNewItems = itemsToAdd.filter(item => !existingKeys.has(item.key));
-        return [...prevItems, ...uniqueNewItems];
+    const supplierIdToAdd = firstProductInfo.supplier;
+
+    // Check if we are starting a new quote or adding to an existing one
+    if (quotationItems.length === 0) {
+      // Starting a new quote, set the current supplier ID
+      setCurrentQuotationSupplierId(supplierIdToAdd);
+    } else if (supplierIdToAdd !== currentQuotationSupplierId) {
+      // Safeguard: Prevent adding items from different suppliers
+      // This should be caught earlier by the Autocomplete check
+      alert("Error: You can only add items from the currently selected supplier for this quotation.");
+      return;
+    }
+
+    const itemsToAdd = [];
+    selectedProducts.forEach(productId => {
+      const productInfo = productsForSupplier.find(p => p.id === productId);
+      if (productInfo) {
+        itemsToAdd.push({
+          key: `${productId}-${supplierIdToAdd}`, // Unique key
+          productId: productId,
+          productName: productInfo.name,
+          supplierId: supplierIdToAdd, // Use consistent supplier ID
+          supplierName: selectedSupplierName,
+          price: parseFloat(productInfo.retail_price || 0).toFixed(2),
+          currency: productInfo.currency || 'USD',
+          unit: productInfo.unit,
+        });
+      }
     });
-        setSelectedProduct(null); // Reset Autocomplete
-    setSuppliersForProduct([]);
-    setSelectedSuppliers(new Set());
 
+    setQuotationItems(prevItems => {
+      const existingKeys = new Set(prevItems.map(item => item.key));
+      const uniqueNewItems = itemsToAdd.filter(item => !existingKeys.has(item.key));
+      return [...prevItems, ...uniqueNewItems];
+    });
+
+    // Clear selected products, but KEEP the supplier selected
+    setSelectedProducts(new Set());
+    // Do NOT reset selectedSupplierName here
   };
+
   const handleRemoveQuotationItem = (keyToRemove) => {
-
-    setQuotationItems(prevItems => prevItems.filter(item => item.key !== keyToRemove));
-
-  };
- const handleCreateQuotation = () => {
-
-    console.log("Creating Quotation with items:", quotationItems);
-
-    alert(`Quotation Created (in console) with ${quotationItems.length} items.`);
-
-    // --- NEW: Clear the current quotation list ---
-
-    setQuotationItems([]);
-
-
-
-    // Optionally navigate away or reset other parts of the form
-
-    setSelectedProduct(null);
-
-    setSuppliersForProduct([]);
-
-    setSelectedSuppliers(new Set());
-
-    // Here you would eventually call your createQuotation API mutation
-
-    // navigate('/quotations'); // Optionally navigate away
-
+    setQuotationItems(prevItems => {
+        const remainingItems = prevItems.filter(item => item.key !== keyToRemove);
+        // If list becomes empty, reset the current supplier ID tracker
+        if (remainingItems.length === 0) {
+            setCurrentQuotationSupplierId(null);
+        }
+        return remainingItems;
+    });
   };
 
+  // --- MODIFIED: Create Quotation handler (simplified) ---
+  const handleCreateQuotation = async () => {
+    if (quotationItems.length === 0 || currentQuotationSupplierId === null) {
+        showNotification({ message: "No items added or supplier not set.", type: "warning" });
+        return;
+    };
 
-  // --- Loading and Error Handling depends only on the single query ---
+    // 1. Prepare the single payload
+    const payload = {
+      supplier_id: currentQuotationSupplierId,
+      total_amount: quotationItems.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2),
+      items: quotationItems.map(item => ({
+        product_id: item.productId,
+        unit_price: String(item.price), // Ensure string format if API requires
+        total_amount: String(item.price), // Assuming quantity 1, ensure string
+      })),
+      // Add other top-level fields if your API expects them (e.g., title, notes)
+      title: `Quotation for ${quotationItems[0]?.supplierName || 'Supplier'}`,
+      notes: "", // Add a notes field if needed
+      currency: quotationItems[0]?.currency || 'USD', // Get currency from first item
+    };
+
+    try {
+      // 2. Make the single API call
+      const result = await createQuotation(payload).unwrap();
+
+      showNotification({
+        message: `Successfully created quotation ID ${result?.id || payload.supplier_id}.`, // Use ID from response if available
+        type: "success",
+      });
+      // --- 3. Generate PDF using the data we have ---
+      // Construct the 'quote' object needed by generateQuotationPDF
+      const quoteDataForPDF = {
+        id: result?.id || payload.supplier_id, // Use ID from API response if available
+        supplier_name: quotationItems[0]?.supplierName || 'N/A',
+        created_at: result?.created_at || new Date().toISOString(), // Use API response or now
+        items: quotationItems.map(item => ({ // Map items to match PDF function's expectation
+            product_name: item.productName,
+            quantity: item.quantity || 1, // Assuming quantity 1 if not stored
+            unit_price: item.price,
+            total_price: item.price // Assuming quantity 1
+        })),
+        total_amount: payload.total_amount,
+        currency: payload.currency,
+        title: payload.title,
+        notes: payload.notes,
+      };
+
+      try {
+        generateQuotationPDF(quoteDataForPDF); // Call the imported PDF function
+      } catch (pdfError) {
+        console.error("PDF Generation Error:", pdfError);
+        showNotification({ message: "Quotation created but failed to generate PDF.", type: "warning" });
+      }
+      // --- End PDF Generation ---
+
+      // 3. Clear everything on success
+      setQuotationItems([]);
+      setSelectedSupplierName(null);
+      setProductsForSupplier([]);
+      setSelectedProducts(new Set());
+      setCurrentQuotationSupplierId(null); // Reset tracked supplier
+
+    } catch (err) {
+      console.error("Failed to create quotation:", err);
+      handleApiError(err, showNotification);
+    }
+  };
+
+
+  // --- Loading and Error Handling ---
   if (isLoading) {
     return <Box display="flex" justifyContent="center" p={5}><CircularProgress /></Box>;
   }
   if (isError) {
-    return <Alert severity="error">Error loading quotation data: {JSON.stringify(error)}</Alert>;
+    return <Alert severity="error">Error loading data: {JSON.stringify(error)}</Alert>;
   }
+
   return (
     <Box>
       <Button startIcon={<ArrowBackIcon />} onClick={() => navigate("/quotations")} sx={{ mb: 2 }}>
         Back to Quotations
       </Button>
       <Typography variant="h4" fontWeight={600} mb={3}>
-        Build New Quotation
+       Create Quotation
       </Typography>
 
-      {/* Section 1: Product Selection & Supplier Listing */}
+      {/* Section 1: Supplier Selection & Product Listing */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>1. Select Product</Typography>
+        <Typography variant="h6" gutterBottom>1. Select Supplier</Typography>
         <Autocomplete
-          id="product-quotation-select"
-          options={productOptions} // Use derived product names
-          getOptionLabel={(option) => option || ""} // Option is just the name string
-          value={selectedProduct} // State now holds the name string
-          onChange={(event, newValue) => setSelectedProduct(newValue)} // Set the name string
-          renderInput={(params) => <TextField {...params} label="Search Product" />}
+          id="supplier-quotation-select"
+          options={supplierOptions}
+          getOptionLabel={(option) => option || ""}
+          value={selectedSupplierName}
+          onChange={(event, newValue) => {
+            // --- MODIFIED: Autocomplete onChange logic ---
+            const newSupplierId = supplierWiseData && newValue
+              ? supplierWiseData[newValue]?.[0]?.supplier
+              : null;
+
+            // Check only if items exist AND the *actual ID* is changing
+            if (quotationItems.length > 0 && newSupplierId !== currentQuotationSupplierId && newSupplierId !== null) {
+              
+                setQuotationItems([]);
+                setCurrentQuotationSupplierId(newSupplierId);
+                setSelectedSupplierName(newValue); // Update the name state
+              
+            } else {
+              // No conflict or clearing existing items: Just update the selected supplier
+              setCurrentQuotationSupplierId(newSupplierId);
+              setSelectedSupplierName(newValue);
+            }
+            // --- END MODIFIED LOGIC ---
+          }}
+          renderInput={(params) => <TextField {...params} label="" placeholder="Choose a supplier..." />}
           sx={{ mb: 2 }}
         />
 
-        {selectedProduct && (
+        {/* Product List - Renders based on selectedSupplierName */}
+        {selectedSupplierName && (
           <Box mt={2}>
-            <Typography variant="subtitle1" gutterBottom>Select Suppliers for "{selectedProduct}":</Typography>
-            {suppliersForProduct.length > 0 ? (
-              <List dense sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
-                {suppliersForProduct.map((supplierInfo) => (
-                  <ListItem key={supplierInfo.supplierId} disablePadding>
-                     <ListItemIcon sx={{ minWidth: 0, mr: 1 }}>
-                       <Checkbox
-                         edge="start"
-                         checked={selectedSuppliers.has(supplierInfo.supplierId)}
-                         onChange={() => handleSupplierSelect(supplierInfo.supplierId)}
-                         size="small"
-                       />
-                     </ListItemIcon>
-                     <ListItemText
-                       primary={supplierInfo.supplierName}
-                       secondary={`Mobile: ${supplierInfo.mobile || 'N/A'}`}
-                     />
-                     <Typography variant="body2" fontWeight="bold" sx={{ ml: 2 }}>
-                       {`${supplierInfo.currency} ${supplierInfo.price}`}
-                     </Typography>
-                   </ListItem>
-                ))}
-              </List>
-            ) : (
-             <Typography color="text.secondary">No suppliers found offering this product.</Typography>
-            )}
+            <Typography variant="subtitle1" gutterBottom>Select Products from "{selectedSupplierName}":</Typography>
+            {/* Loading/Error specifically for products can be added here if using a separate hook */}
+          {productsForSupplier.length > 0 ? (
+  <List dense sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 1 }}>
+    {productsForSupplier.map((productInfo) => (
+      <ListItem key={productInfo.id} disablePadding sx={{ alignItems: 'flex-start' }}> {/* Align items top */}
+        <ListItemIcon sx={{ minWidth: 0, mr: 1, mt: 0.5 }}> {/* Adjust icon margin top */}
+          <Checkbox
+            edge="start"
+            checked={selectedProducts.has(productInfo.id)}
+            onChange={() => handleProductSelect(productInfo.id)}
+            size="small"
+          />
+        </ListItemIcon>
+        {/* Updated ListItemText */}
+        <ListItemText
+          primary={productInfo.name}
+          secondary={
+            <React.Fragment>
+              <Typography component="span" variant="body2" color="text.primary" sx={{ display: 'block' }}>
+                {`Unit: ${productInfo.unit || 'N/A'}`}
+              </Typography>
+              <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                {`Packing: ${productInfo.packing || 'N/A'}  Origin: ${productInfo.country_of_origin || 'N/A'}`}
+              </Typography>
+              {/* <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                {`Origin: ${productInfo.country_of_origin || 'N/A'}`}
+              </Typography> */}
+            </React.Fragment>
+          }
+        />
+        {/* Price remains on the right */}
+        <Typography variant="body2" fontWeight="bold" sx={{ ml: 2, mt: 0.5 }}> {/* Adjust margin top */}
+          {`${productInfo.currency || 'USD'} ${parseFloat(productInfo.retail_price || 0).toFixed(2)}`}
+        </Typography>
+      </ListItem>
+    ))}
+  </List>
+) : (
+  <Typography color="text.secondary">No products found for this supplier.</Typography>
+)}
+            {/* Add Button */}
             <Button
               variant="contained"
               startIcon={<AddShoppingCartIcon />}
               onClick={handleAddToQuotation}
-              disabled={selectedSuppliers.size === 0}
+              disabled={selectedProducts.size === 0}
               sx={{ mt: 2 }}
             >
-              Add Selected Suppliers to Quotation
+              Add Selected Products
             </Button>
           </Box>
         )}
@@ -218,56 +307,58 @@ function CreateQuotationPage() {
 
       {/* Section 2: Current Quotation List */}
       <Paper sx={{ p: 3 }}>
-  <Typography variant="h6" gutterBottom>2. Current Quotation Items</Typography>
-  <TableContainer>
-    <Table size="small">
-      <TableHead>
-        <TableRow>
-          <TableCell>Product</TableCell>
-          <TableCell>Supplier</TableCell>
-          <TableCell align="right">Price</TableCell>
-          <TableCell align="center">Remove</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {/* Check if the array is empty */}
-        {quotationItems.length === 0 ? (
-          <TableRow>
-            {/* Cell spanning all columns */}
-            <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-              <Typography color="text.secondary">No items added to the quotation yet.</Typography>
-            </TableCell>
-          </TableRow>
-        ) : (
-          // If not empty, map over the items
-          quotationItems.map((item) => (
-            <TableRow key={item.key}>
-              <TableCell>{item.productName}</TableCell>
-              <TableCell>{item.supplierName}</TableCell>
-              <TableCell align="right">{`${item.currency} ${item.price}`}</TableCell>
-              <TableCell align="center">
-                <IconButton size="small" color="error" onClick={() => handleRemoveQuotationItem(item.key)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  </TableContainer>
-  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-    <Button
-      variant="contained"
-      color="primary"
-      startIcon={<CreateIcon />}
-      onClick={handleCreateQuotation}
-      disabled={quotationItems.length === 0}
-    >
-      Create Quotation
-    </Button>
-  </Box>
-</Paper>
+        <Typography variant="h6" gutterBottom>
+          2. Quotation Items 
+        </Typography>
+        <TableContainer>
+          {/* ... Table remains the same ... */}
+           <Table size="small">
+             <TableHead>
+               <TableRow>
+                 <TableCell>Product</TableCell>
+                 <TableCell>Supplier</TableCell>
+                 <TableCell align="right">Price</TableCell>
+                 <TableCell align="center">Remove</TableCell>
+               </TableRow>
+             </TableHead>
+             <TableBody>
+               {quotationItems.length === 0 ? (
+                 <TableRow>
+                   <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                     <Typography color="text.secondary">No items added yet.</Typography>
+                   </TableCell>
+                 </TableRow>
+               ) : (
+                 quotationItems.map((item) => (
+                   <TableRow key={item.key}>
+                     <TableCell>{item.productName}</TableCell>
+                     <TableCell>{item.supplierName}</TableCell>
+                     <TableCell align="right">{`${item.currency} ${item.price}`}</TableCell>
+                     <TableCell align="center">
+                       <IconButton size="small" color="error" onClick={() => handleRemoveQuotationItem(item.key)}>
+                         <DeleteIcon fontSize="small" />
+                       </IconButton>
+                     </TableCell>
+                   </TableRow>
+                 ))
+               )}
+             </TableBody>
+           </Table>
+        </TableContainer>
+        {/* Create Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={isCreatingQuotation ? <CircularProgress size={20} color="inherit"/> : <CreateIcon />}
+            onClick={handleCreateQuotation}
+            disabled={quotationItems.length === 0 || isCreatingQuotation}
+          >
+            {isCreatingQuotation ? 'Creating...' : 'Create Quotation'} {/* Updated text */}
+          </Button>
+        </Box>
+      </Paper>
+
     </Box>
   );
 }

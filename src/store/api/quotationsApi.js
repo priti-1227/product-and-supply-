@@ -1,98 +1,130 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-// Assuming you have these defined in a baseApi file
-import { baseQueryWithReauth, TAG_TYPES } from "./baseApi";
+import { baseQueryWithReauth, TAG_TYPES } from "./baseApi"; // Ensure TAG_TYPES.QUOTATIONS is defined here
 
-// Define a specific tag type for quotations
-const QUOTATION_TAG = "Quotations";
+// Add 'CustomQuotation' and 'SupplierWiseProducts' if they aren't in baseApi
+const validTagTypes = [
+    TAG_TYPES.QUOTATIONS,
+    TAG_TYPES.DASHBOARD,
+    "CustomQuotation",
+    "SupplierWiseProducts"
+];
 
 export const quotationsApi = createApi({
   reducerPath: "quotationsApi",
-  baseQuery: baseQueryWithReauth, // Use the base query with re-authentication
-  tagTypes: [QUOTATION_TAG, TAG_TYPES.DASHBOARD, "CustomQuotation"], // Add specific tags
+  baseQuery: baseQueryWithReauth,
+  // Ensure all used tag types are declared here
+  tagTypes: validTagTypes,
 
+  // ✅ Added the endpoints key and builder function
   endpoints: (builder) => ({
-    // GET all quotations with pagination and search (assuming similar structure to items/suppliers)
     getQuotations: builder.query({
-      query: ({ page = 1, limit = 10, search = "" }) => ({
-        url: "/quotations/", // Assuming endpoint '/quotations/'
-        params: { page, limit, search },
-      }),
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.results.map(({ id }) => ({ type: QUOTATION_TAG, id })), // Map over results
-              { type: QUOTATION_TAG, id: "LIST" },
-            ]
-          : [{ type: QUOTATION_TAG, id: "LIST" }],
-      transformResponse: (response) => ({
-        // Adapt to { count, results } structure
-        data: response.results || [],
-        total: response.count || 0,
-      }),
+      query: () => "/custom-quotation", // Assuming this is the correct GET list endpoint
+providesTags: (result) => { // 'result' here is { data: [...], total: ... }
+  // Check if data exists and is an array before mapping
+  if (result?.data && Array.isArray(result.data)) {
+    return [
+      // Map over the actual array inside result.data
+      ...result.data.map(({ id }) => ({ type: TAG_TYPES.QUOTATIONS, id })),
+      { type: TAG_TYPES.QUOTATIONS, id: "LIST" },
+    ];
+  }
+  // Fallback if no data or data is not an array
+  return [{ type: TAG_TYPES.QUOTATIONS, id: "LIST" }];
+},
+
+     transformResponse: (response) => {
+  console.log("priti --- Inside transformResponse ---");
+  console.log("priti Raw API Response received:", response);
+  console.log("priti Is response an array?", Array.isArray(response));
+
+  // Ensure the response is actually an array before trying to use .length
+  if (!Array.isArray(response)) {
+    console.error("❌ transformResponse Error: Expected array, got:", typeof response, response);
+    // Return default structure on error
+    return { data: [], total: 0 };
+  }
+
+  // If it's an array, proceed
+  const transformed = {
+    data: response, // Use the array directly
+    total: response.length, // Get length from the array
+  };
+  console.log("Data being returned by transformResponse:", transformed);
+  return transformed;
+},
     }),
 
     // GET single quotation by ID
     getQuotationById: builder.query({
-      query: (id) => `/quotations/${id}/`, // Add trailing slash if needed
-      providesTags: (result, error, id) => [{ type: QUOTATION_TAG, id }],
+      query: (id) => `/quotations/${id}/`, // Assuming a different endpoint for single item
+      // ✅ Corrected tag type reference
+      providesTags: (result, error, id) => [{ type: TAG_TYPES.QUOTATIONS, id }],
     }),
 
     // POST create new quotation
     createQuotation: builder.mutation({
-      // The body will likely be an object containing quotation details and items
-      query: (newQuotationData) => ({
-        url: "/quotations/", // Add trailing slash
-        method: "POST",
-        body: newQuotationData, // Send as JSON
+      query: (quotationData) => ({
+        url: '/custom-quotation', // Use the correct POST endpoint
+        method: 'POST',
+        body: quotationData,
       }),
-      // Invalidate the list to refetch after creation
-      invalidatesTags: [
-          { type: QUOTATION_TAG, id: "LIST" },
-          { type: TAG_TYPES.DASHBOARD, id: "STATS" } // Invalidate dashboard if needed
-      ],
+      // ✅ Corrected tag type reference
+      invalidatesTags: [{ type: TAG_TYPES.QUOTATIONS, id: 'LIST' }, /* other tags */],
     }),
 
     // PUT or PATCH update quotation status or details
     updateQuotation: builder.mutation({
-      // Expects an object like { id, body } where body contains updated fields
       query: ({ id, body }) => ({
-        url: `/quotations/${id}/`, // Add trailing slash
+        url: `/quotations/${id}/`, // Assuming a different endpoint for update
         method: "PATCH", // Or PUT
         body: body,
       }),
       invalidatesTags: (result, error, { id }) => [
-        { type: QUOTATION_TAG, id },
-        { type: QUOTATION_TAG, id: "LIST" },
+        { type: TAG_TYPES.QUOTATIONS, id },
+        { type: TAG_TYPES.QUOTATIONS, id: "LIST" },
       ],
     }),
 
     // DELETE quotation
     deleteQuotation: builder.mutation({
       query: (id) => ({
-        url: `/quotations/${id}/`, // Add trailing slash
+        url: `/quotations/${id}/`, // Assuming a different endpoint for delete
         method: "DELETE",
       }),
       invalidatesTags: (result, error, id) => [
-        { type: QUOTATION_TAG, id },
-        { type: QUOTATION_TAG, id: "LIST" },
-        { type: TAG_TYPES.DASHBOARD, id: "STATS" }, // Invalidate dashboard if needed
+        { type: TAG_TYPES.QUOTATIONS, id },
+        { type: TAG_TYPES.QUOTATIONS, id: "LIST" },
+        { type: TAG_TYPES.DASHBOARD, id: "STATS" },
       ],
     }),
 
-    // GET custom quotation data (supplier/product pricing)
+    // GET custom quotation data (supplier/product pricing) - Duplicated? Check if needed
     getCustomQuotationData: builder.query({
+       // Note: This seems redundant if getQuotations uses the same endpoint
       query: () => ({
-        url: '/custom-quotation', // Ensure trailing slash if needed
+        url: '/custom-quotation/',
         method: 'GET',
       }),
       transformResponse: (response) => {
-        return response || {}; // Return the object or an empty one if error
+        return response || {};
       },
       providesTags: [{ type: 'CustomQuotation', id: 'ALL' }],
     }),
 
-  }),
-});
+    // GET supplier wise products
+    getSupplierWiseProducts: builder.query({
+      query: () => ({
+        url: '/supplier-wise-product', // Added trailing slash based on pattern
+        method: 'GET',
+      }),
+      transformResponse: (response) => {
+        return response || {};
+      },
+      providesTags: [{ type: 'SupplierWiseProducts', id: 'ALL' }],
+    }),
+
+  }), // ✅ Closing parenthesis for endpoints builder
+}); // ✅ Closing parenthesis for createApi
 
 // Export the auto-generated hooks
 export const {
@@ -101,9 +133,10 @@ export const {
   useCreateQuotationMutation,
   useUpdateQuotationMutation,
   useDeleteQuotationMutation,
-  useGetCustomQuotationDataQuery, // Your custom hook
+  useGetCustomQuotationDataQuery,
   useLazyGetQuotationsQuery,
   useLazyGetQuotationByIdQuery,
+  useGetSupplierWiseProductsQuery,
 } = quotationsApi;
 
 // --- Don't forget to add this quotationsApi to your store configuration! ---
