@@ -155,7 +155,7 @@ function CreateQuotationPage() {
       const result = await createQuotation(payload).unwrap();
 
       showNotification({
-        message: `Successfully created quotation ID ${result?.id || payload.supplier_id}.`, // Use ID from response if available
+        message: `Successfully quotation created  `, // Use ID from response if available
         type: "success",
       });
       // --- 3. Generate PDF using the data we have ---
