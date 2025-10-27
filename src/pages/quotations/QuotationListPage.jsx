@@ -9,6 +9,8 @@ import AddIcon from '@mui/icons-material/Add';
 // import EditIcon from '@mui/icons-material/Edit'; // Remove if not used
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useGetQuotationsQuery } from '../../store/api/quotationsApi';
+import { generateQuotationPDF } from '../../utils/pdfUtils';
+import DownloadIcon from '@mui/icons-material/Download';
 function QuotationListPage() {
   const navigate = useNavigate();
   const {
@@ -57,17 +59,17 @@ console.log(data,"test data")
 
       {/* Quotation List Table */}
       <Paper sx={{ p: 3 }}>
-        <TableContainer>
-          <Table stickyHeader size="small">
-            <TableHead>
+        <TableContainer sx={{ maxHeight: 400 }}>
+          <Table stickyHeader aria-label="sticky table">
+            <TableHead sx={{ letterSpacing: "0.05em" }}>
               <TableRow>
                 {/* Adjust headers based on actual quotation data */}
-                <TableCell sx={{ fontWeight: 600 }}>Quotation ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Date Created</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Supplier</TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="right">Item Count</TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="right">Total Amount</TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="center">Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Quotation ID</TableCell>
+                <TableCell sx={{ fontWeight: 600 ,textAlign: "center", whiteSpace: "nowrap"}}  align="center">Date Created</TableCell>
+                <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Supplier</TableCell>
+                <TableCell sx={{ fontWeight: 600 ,textAlign: "center", whiteSpace: "nowrap"}}  align="center">Item Count</TableCell>
+                <TableCell sx={{ fontWeight: 600, textAlign: "center", bgcolor: "primary.light", whiteSpace: "nowrap" }}>Total Amount</TableCell>
+                <TableCell sx={{ fontWeight: 600 ,textAlign: "center", whiteSpace: "nowrap"}} align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -84,10 +86,20 @@ console.log(data,"test data")
                     <TableCell>{quote.id || 'N/A'}</TableCell>
                     <TableCell>{quote.created_at ? new Date(quote.created_at).toLocaleString() : 'N/A'}</TableCell>
                     <TableCell>{quote.supplier_name || 'N/A'}</TableCell>
-                    <TableCell align="right">{quote.items?.length || 0}</TableCell> {/* Count items */}
-                    <TableCell align="right">{quote.total_amount ? `${quote.currency || '$'}${parseFloat(quote.total_amount).toFixed(2)}` : 'N/A'}</TableCell>
+                    <TableCell align="center">{quote.items?.length || 0}</TableCell> {/* Count items */}
+                    <TableCell align="center">{quote.total_amount ? `${quote.currency || '$'} ${parseFloat(quote.total_amount).toFixed(2)}` : 'N/A'}</TableCell>
                     <TableCell align="center">
-                      <Tooltip title="View Details">
+                        <Tooltip title="Download PDF">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => generateQuotationPDF(quote)}
+                          disabled={!quote.items || quote.items.length === 0}
+                        >
+                          <DownloadIcon fontSize="medium"/>
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="View Details" sx={{ml:1}}>
                         <IconButton
                           size="small"
                           onClick={() => {
@@ -99,12 +111,7 @@ console.log(data,"test data")
                             <VisibilityIcon fontSize="small"/>
                         </IconButton>
                       </Tooltip>
-                      {/* Optional: Add Edit button */}
-                      {/* <Tooltip title="Edit Quotation">
-                          <IconButton size="small" color="primary" onClick={() => navigate(`/quotations/edit/${quote.id}`)}>
-                              <EditIcon fontSize="small"/>
-                          </IconButton>
-                      </Tooltip> */}
+                  
                     </TableCell>
                   </TableRow>
                 ))
