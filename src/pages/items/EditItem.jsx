@@ -70,18 +70,18 @@ function EditItem() {
 
   const onSubmit = async (data) => {
     // For file uploads on edit, you'd need FormData again.
-    // const formData = new FormData();
-    // Object.keys(data).forEach(key => {
-    //     // Only append the image if it's a new file object
-    //     if (key === 'image' && data.image instanceof File) {
-    //         formData.append('image', data.image);
-    //     } else if (key !== 'image' && data[key] != null) {
-    //         formData.append(key, data[key]);
-    //     }
-    // });
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+        // Only append the image if it's a new file object
+        if (key === 'image' && data.image instanceof File) {
+            formData.append('image', data.image);
+        } else if (key !== 'image' && data[key] != null) {
+            formData.append(key, data[key]);
+        }
+    });
 
     try {
-      await updateItem({ id, ...data }).unwrap()
+      await updateItem({ id, formData }).unwrap()
       showNotification({ message: "Item updated successfully", type: "success" })
       navigate("/items")
     } catch (err) {
@@ -158,7 +158,7 @@ function EditItem() {
             <Box display={"grid"} gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx={"auto"} sx={{ width: { xs: "100%", lg: "50%" } }} alignItems={"center"} justifyContent={"center"}>
               <Grid sx={{ width: "100%", display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Description</Grid>
               <Grid item xs={6}>
-                <TextField fullWidth multiline rows={4} {...register("description")} placeholder="Description" error={!!errors.description} helperText={errors.description?.message}/>
+                <TextField fullWidth multiline rows={2} {...register("description")} placeholder="Description" error={!!errors.description} helperText={errors.description?.message}/>
               </Grid>
             </Box>
 
@@ -219,10 +219,33 @@ function EditItem() {
       type="file"
       accept="image/*"
       // {...register("image")}
-      onChange={(e) => {
-    const file = e.target.files ? e.target.files[0] : null;
-    setValue("image", file); // Stores the file object, not a Base64 string
-  }}
+  //     onChange={(e) => {
+  //   const file = e.target.files ? e.target.files[0] : null;
+  //   setValue("image", file); // Stores the file object, not a Base64 string
+  // }}
+   onChange={(e) => {
+        const file = e.target.files ? e.target.files[0] : null;
+
+        if (!file) {
+          // No file selected, just set value to null
+          setValue("image", null);
+          return;
+        }
+
+        // --- This is the validation check ---
+        if (file.type.startsWith("image/")) {
+          // Valid image file
+          setValue("image", file); // Stores the file object
+        } else {
+          // Invalid file type
+          showNotification({ 
+            message: "Invalid file type. Please upload a valid image (e.g., PNG, JPG).", 
+            type: "error" 
+          });
+          setValue("image", null); // Set form value to null
+          e.target.value = null; // Clear the file input so the user can re-select
+        }
+      }}
       style={{ width: "100%" }}
     />              </Grid>
             </Box>
@@ -231,7 +254,16 @@ function EditItem() {
             <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Is Available</Grid>
               <Grid item xs={6}>
-                <Checkbox {...register("is_available")} />
+              <Controller
+      name="is_available"
+      control={control}
+      render={({ field }) => (
+        <Checkbox
+          checked={field.value} // Use field.value to set the checked state
+          onChange={field.onChange} // Use field.onChange to update the form state
+        />
+      )}
+    />
               </Grid>
             </Box>
             

@@ -64,7 +64,7 @@ function AddItem() {
     }
   });
     try {
-      await createItem(data).unwrap()
+      await createItem(formData).unwrap()
       showNotification({
         message: "Item created successfully",
         type: "success",
@@ -171,7 +171,7 @@ function AddItem() {
                 <TextField
                   fullWidth
                   multiline
-                  rows={4}
+                  rows={2}
                   
                   {...register("description")}
                   placeholder="Description"
@@ -357,10 +357,33 @@ function AddItem() {
       type="file"
       accept="image/*"
       // {...register("image")}
-      onChange={(e) => {
-    const file = e.target.files ? e.target.files[0] : null;
-    setValue("image", file); // Stores the file object, not a Base64 string
-  }}
+  //     onChange={(e) => {
+  //   const file = e.target.files ? e.target.files[0] : null;
+  //   setValue("image", file); // Stores the file object, not a Base64 string
+  // }}
+  onChange={(e) => {
+        const file = e.target.files ? e.target.files[0] : null;
+
+        if (!file) {
+          // No file selected, just set value to null
+          setValue("image", null);
+          return;
+        }
+
+        // --- This is the validation check ---
+        if (file.type.startsWith("image/")) {
+          // Valid image file
+          setValue("image", file); // Stores the file object
+        } else {
+          // Invalid file type
+          showNotification({ 
+            message: "Invalid file type. Please upload a valid image (e.g., PNG, JPG).", 
+            type: "error" 
+          });
+          setValue("image", null); // Set form value to null
+          e.target.value = null; // Clear the file input so the user can re-select
+        }
+      }}
       style={{ width: "100%" }}
     />
      

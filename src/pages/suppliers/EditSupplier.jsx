@@ -159,7 +159,7 @@ function EditSupplier() {
                 Address
               </Grid>
               <Grid item xs={6}>
-                <TextField fullWidth multiline rows={4} {...register("address" ,{ required: "Mobile number is required" })} error={!!errors.address} helperText={errors.address?.message} placeholder="Address" />
+                <TextField fullWidth multiline rows={2} {...register("address" ,{ required: "Mobile number is required" })} error={!!errors.address} helperText={errors.address?.message} placeholder="Address" />
               </Grid>
             </Box>
 
