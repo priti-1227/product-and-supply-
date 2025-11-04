@@ -7,24 +7,28 @@ export const itemsApi = createApi({
   tagTypes: [TAG_TYPES.ITEMS, TAG_TYPES.DASHBOARD],
   endpoints: (builder) => ({
     // GET all items with filters
- getItems: builder.query({
-  query: ({ page = 1, limit = 10, search = "" }) => ({
-    url: "/products/",
-    params: { page, limit, search },
-  }),
+// in src/store/api/itemsApi.js
 
+getItems: builder.query({
+  // 1. Updated query: No longer sends pagination/search params
+  //    (unless your API *does* filter the flat array on the backend?)
+  //    If it does filter, keep the params. If not, simplify:
+  query: () => "/products/",
+
+  // 2. providesTags is likely correct, it expects the object from transformResponse
   providesTags: (result) =>
     result
       ? [...result.data.map(({ id }) => ({ type: TAG_TYPES.ITEMS, id })), { type: TAG_TYPES.ITEMS, id: "LIST" }]
       : [{ type: TAG_TYPES.ITEMS, id: "LIST" }],
 
-  // --- THIS IS THE CORRECTED PART ---
-  transformResponse: (response) => ({
-    // Get the array from the 'results' key
-    data: response.results || [],
-    // Get the total from the 'count' key
-    total: response.count || 0,
-  }),
+  // 3. --- THIS IS THE FIX ---
+  //    Transform the flat array response into the object your component expects
+  transformResponse: (response) => { // 'response' is the flat array [...]
+    return {
+      data: response || [], // Put the array into the 'data' key
+      total: response?.length || 0, // Calculate total from the array's length
+    };
+  },
 }),
 
     // GET single item by ID
@@ -39,7 +43,9 @@ export const itemsApi = createApi({
         url: "/products/",
         method: "POST",
         body: formData,
+       
       }),
+  
       invalidatesTags: [
         { type: TAG_TYPES.ITEMS, id: "LIST" },
         { type: TAG_TYPES.DASHBOARD, id: "STATS" },
@@ -47,17 +53,17 @@ export const itemsApi = createApi({
     }),
 
     // PUT update item
-    updateItem: builder.mutation({
-      query: ({ id, ...patch }) => ({
-        url: `/products/${id}/`,
-        method: "PUT",
-        body: patch,
-      }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: TAG_TYPES.ITEMS, id },
-        { type: TAG_TYPES.ITEMS, id: "LIST" },
-      ],
-    }),
+ updateItem: builder.mutation({
+  query: ({ id, formData }) => ({
+    url: `/products/${id}/`,
+    method: "PUT",
+    body: formData, // send FormData directly
+  }),
+  invalidatesTags: (result, error, { id }) => [
+    { type: TAG_TYPES.ITEMS, id },
+    { type: TAG_TYPES.ITEMS, id: "LIST" },
+  ],
+}),
 
     // DELETE item
     deleteItem: builder.mutation({

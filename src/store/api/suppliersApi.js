@@ -8,13 +8,11 @@ export const suppliersApi = createApi({
   endpoints: (builder) => ({
  // GET all suppliers
 getSuppliers: builder.query({
+  // 1. The query is simplified. The API returns a full list, so no parameters are needed.
+  query: () => "/suppliers/",
 
-  query: ({ page = 1, limit = 10, search = "" }) => ({
-    url: "/suppliers/",
-    
-    params: { page, limit, search },
-  }),
-
+  // 2. This 'providesTags' is now correct.
+  // 'result' will be the object { data: [...], total: ... } returned by transformResponse.
   providesTags: (result) =>
     result
       ? [
@@ -22,14 +20,13 @@ getSuppliers: builder.query({
           { type: TAG_TYPES.SUPPLIERS, id: "LIST" },
         ]
       : [{ type: TAG_TYPES.SUPPLIERS, id: "LIST" }],
-      
-  
-  transformResponse: (response) => {
+
+  // 3. This is the main fix.
+  // It transforms the flat array [...] into the object { data: [...], total: ... }
+  transformResponse: (response) => { // 'response' is the flat array [...]
     return {
-     
-      data: response.results || [],
-   
-      total: response.count || 0,
+      data: response || [], // Put the array into the 'data' key
+      total: response?.length || 0, // Calculate total from the array's length
     };
   },
 }),

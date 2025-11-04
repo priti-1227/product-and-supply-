@@ -377,7 +377,7 @@ function AddSupplier() {
     <TextField
       fullWidth
       multiline
-      rows={4}
+      rows={2}
       
       {...register("address", { required: "Address is required" })}
       placeholder="Address"
