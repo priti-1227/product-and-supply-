@@ -6,7 +6,7 @@
     },
     {
       "source": "/media/(.*)",
-      "destination": "http://5.167.114.0/media/$1"
+      "destination": "http://54.167.114.0/media/$1"
     },
     {
       "source": "/(.*)",
