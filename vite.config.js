@@ -11,6 +11,11 @@ export default defineConfig({
         target: 'http://54.167.114.0',
         changeOrigin: true,
       },
+      '/media': {
+        target: 'http://54.167.114.0',
+        changeOrigin: true,
+        // No rewrite needed, as the path is the same
+      }
     }
   }
 })

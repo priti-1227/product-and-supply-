@@ -20,6 +20,7 @@ import { useGetItemByIdQuery, useUpdateItemMutation } from "../../store/api/item
 import { useGetSuppliersQuery } from "../../store/api/suppliersApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
+import { proxifyImageUrl } from "../../utils/urlUtils";
 
 function EditItem() {
   const navigate = useNavigate()
@@ -214,7 +215,9 @@ function EditItem() {
             <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "1fr 2fr" }} gap={3} mx="auto" sx={{ width: { xs: "100%", lg: "50%" } }} alignItems="center" justifyContent="center">
               <Grid sx={{ display: "flex", flexDirection: { xs: "row", md: "row-reverse" }, fontWeight: 600 }}>Upload Image</Grid>
               <Grid item xs={6}>
-                 {item?.image && <img src={item.image} alt="Current item" style={{ width: 100, height: 100, marginBottom: 10, objectFit: 'cover' }} />}
+                                 {/* {item?.image && <img src={item.image} alt="Current item" style={{ width: 100, height: 100, marginBottom: 10, objectFit: 'cover' }} />} */}
+
+                 {item?.image && <img src={proxifyImageUrl(item.image)} alt="Current item" style={{ width: 100, height: 100, marginBottom: 10, objectFit: 'cover' }} />}
  <TextField
       type="file"
       accept="image/*"
