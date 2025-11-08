@@ -130,7 +130,10 @@ function ItemsList() {
       refetch(); // Refetch the items list
 
     } catch (error) {
-      handleApiError(error, showNotification)
+     showNotification({
+        message: error?.data?.message || "Failed to upload file",
+        type: "error" // Set the type here
+      });
       console.error(error);
     } finally {
       // Clear the file input's value

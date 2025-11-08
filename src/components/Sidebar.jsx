@@ -44,7 +44,7 @@ function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
       >
         <InventoryIcon sx={{ fontSize: 32 }} />
         <Typography variant="h4" fontWeight={600} color="black">
-          ABC
+          P & S
         </Typography>
       </Box>
       <Divider />

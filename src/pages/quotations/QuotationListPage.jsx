@@ -11,6 +11,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useGetQuotationsQuery } from '../../store/api/quotationsApi';
 import { generateQuotationPDF } from '../../utils/pdfUtils';
 import DownloadIcon from '@mui/icons-material/Download';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import { generateQuotationCSV } from '../../utils/csvUtils';
+import { generateQuotationExcel } from '../../utils/excelUtils';
 function QuotationListPage() {
   const navigate = useNavigate();
   const {
@@ -97,6 +100,16 @@ console.log(data,"test data")
                           disabled={!quote.items || quote.items.length === 0}
                         >
                           <DownloadIcon fontSize="medium"/>
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Download as CSV (Excel)">
+                        <IconButton
+                          size="small"
+                          color="success" // Use a different color
+                          onClick={() => generateQuotationExcel(quote)}
+                          disabled={!quote.items || quote.items.length === 0}
+                        >
+                          <GridOnIcon fontSize="medium"/>
                         </IconButton>
                       </Tooltip>
                       {/* <Tooltip title="View Details" sx={{ml:1}}>
