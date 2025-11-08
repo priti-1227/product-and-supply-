@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    // ✅ THE FIX: 'isLoading' is now provided in the value
+
     <AuthContext.Provider value={{ isAuthenticated, authToken, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>

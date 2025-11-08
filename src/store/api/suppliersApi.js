@@ -103,6 +103,16 @@ getSuppliers: builder.query({
         { type: TAG_TYPES.DASHBOARD, id: "STATS" },
       ],
     }),
+    uploadSuppliers: builder.mutation({
+      query: (formData) => ({
+        url: "/supplier-upload", // Your endpoint
+        method: "POST",
+        body: formData, // This is the FormData object
+        // The baseQuery will correctly handle the Content-Type
+      }),
+      // After a successful upload, invalidate the list to force a refetch
+      invalidatesTags: [{ type: TAG_TYPES.SUPPLIERS, id: "LIST" }],
+    }),
 
     // BULK DELETE suppliers
     bulkDeleteSuppliers: builder.mutation({
@@ -135,4 +145,5 @@ export const {
   useGetSupplierStatsQuery,
   useLazyGetSuppliersQuery,
   useLazyGetSupplierByIdQuery,
+  useUploadSuppliersMutation,
 } = suppliersApi

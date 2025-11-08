@@ -25,14 +25,16 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Tooltip,
 } from "@mui/material"
 import AddIcon from "@mui/icons-material/Add"
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteIcon from "@mui/icons-material/Delete"
 import SearchIcon from "@mui/icons-material/Search"
-import { useGetItemsQuery, useDeleteItemMutation } from "../../store/api/itemsApi"
+import { useGetItemsQuery, useDeleteItemMutation, useUploadProductsMutation } from "../../store/api/itemsApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 const USE_DUMMY_DATA = false;
 
 const initialProducts = [
@@ -47,6 +49,7 @@ function ItemsList() {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [uploadProducts, { isLoading: isUploading }] = useUploadProductsMutation()
 
   const { data, isLoading, isError, error, refetch } = useGetItemsQuery({
     page: page + 1,
@@ -109,6 +112,31 @@ function ItemsList() {
     }
   }}
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('products', file); // Use the key 'products'
+
+      const response = await uploadProducts(formData).unwrap();
+
+      showNotification({
+        message: response.message || `File "${file.name}" uploaded successfully.`,
+        type: "success"
+      });
+      
+      refetch(); // Refetch the items list
+
+    } catch (error) {
+      handleApiError(error, showNotification)
+      console.error(error);
+    } finally {
+      // Clear the file input's value
+      event.target.value = null;
+    }
+  }
   if (isLoading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
@@ -174,6 +202,26 @@ function ItemsList() {
             }}
           />
         </Box> */}
+                  <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 ,gap:2}}>
+        <Tooltip title="Upload Products Excel">
+            <Button
+              variant="outlined"
+              component="label"
+              size="small"
+              disabled={isUploading}
+              sx={{
+                borderRadius: "50%",
+                minWidth: 0,
+                width: 40,
+                height: 40,
+                p: 0,
+              }}
+            >
+              {isUploading ? <CircularProgress size={24} /> : <CloudUploadIcon />}
+              <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
+            </Button>
+          </Tooltip>
+          </Box>
 
       <TableContainer sx={{ maxHeight: 400 }}>
   <Table stickyHeader aria-label="sticky table">

@@ -9,7 +9,7 @@ export const supplierListApi = createApi({
     // POST upload supplier list (CSV/Excel)
     uploadSupplierList: builder.mutation({
       query: (formData) => ({
-        url: "/supplier-lists/upload",
+        url: "/supplier-list-upload",
         method: "POST",
         body: formData,
         prepareHeaders: (headers) => {
@@ -74,4 +74,5 @@ export const {
   useGetSupplierListByIdQuery,
   useValidateSupplierListMutation,
   useConfirmSupplierListImportMutation,
+  
 } = supplierListApi

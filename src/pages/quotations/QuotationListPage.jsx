@@ -99,7 +99,7 @@ console.log(data,"test data")
                           <DownloadIcon fontSize="medium"/>
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="View Details" sx={{ml:1}}>
+                      {/* <Tooltip title="View Details" sx={{ml:1}}>
                         <IconButton
                           size="small"
                           onClick={() => {
@@ -110,7 +110,7 @@ console.log(data,"test data")
                         >
                             <VisibilityIcon fontSize="small"/>
                         </IconButton>
-                      </Tooltip>
+                      </Tooltip> */}
                   
                     </TableCell>
                   </TableRow>

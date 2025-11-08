@@ -65,9 +65,9 @@ function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
     ? `linear-gradient(270deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`
     : "transparent",
   boxShadow: isActive
-    ? "0 0.125rem 0.375rem 0 #568a89ff" // Note: This color is not in your theme
+    ? "0 0.125rem 0.375rem 0 #568a89ff" 
     : "none",
-  // Use the theme's text color
+  
   color: isActive ? "white" : theme.palette.text.primary,
   "&:hover": {
     background: isActive
