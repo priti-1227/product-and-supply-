@@ -206,7 +206,7 @@ function ItemsList() {
           />
         </Box> */}
                   <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 ,gap:2}}>
-        <Tooltip title="Upload Products Excel">
+        <Tooltip title="Upload Items Excel">
             <Button
               variant="outlined"
               component="label"

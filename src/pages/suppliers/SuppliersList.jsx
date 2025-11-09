@@ -221,7 +221,7 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
         </Box> */}
         
           <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 ,gap:2}}>
-             <Tooltip title="Upload Products Excel">
+             <Tooltip title="Upload Supplier Excel">
           <Button
   variant="outlined"
   component="label"
