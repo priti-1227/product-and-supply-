@@ -1,14 +1,40 @@
-import { Box, Grid, Card, CardContent, Typography, Paper } from "@mui/material"
+import { Box, Grid, Card, CardContent, Typography, Paper, CircularProgress, Alert } from "@mui/material"
 import { Stack, Chip } from "@mui/material"
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord"
 import SupplierImg from "../assets/supplier.png"
 import ProductImg from "../assets/product.png"
+import quotation from "../assets/quotation.png"
+import checklist from "../assets/checklist.png"
 import cardAnalytics1 from "../assets/card-analytics-1.png"
+import { useGetDashboardDataQuery } from "../store/api/dashboardApi"
+
 
 
 
 
 function Dashboard() {
+  // 2. Call the hook to fetch data
+  const { data, isLoading, isError, error } = useGetDashboardDataQuery();
+  if (data) {
+    console.log("test Dashboard API Response:", data);
+  }
+
+  // 4. Handle Loading State
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  // 5. Handle Error State
+  if (isError) {
+    return (
+      <Box>
+        <Alert severity="error">Failed to load dashboard data. {JSON.stringify(error)}</Alert>
+      </Box>
+    );
+  }
   return (
     <Box>
       <Typography variant="h4" gutterBottom fontWeight={600} mb={3}>
@@ -78,7 +104,7 @@ function Dashboard() {
     <Box sx={{display:"flex",  width:{ xs: "100%", md:"50%"}, gap:3}}>
        {/* suppliers */}
       <Card sx={{width:"50%" , p:2}} ><Typography variant="h5" fontWeight={500} >Total Suppliers</Typography>
-      <Typography variant="h4" fontWeight={600} mt={3} >50+</Typography>
+      <Typography variant="h4" fontWeight={600} mt={3} >{data?.data?.total_suppliers|| 0}</Typography>
       <Box display={"flex"} alignItems="center" justifyContent="center">
         <Box
     component="img"
@@ -94,7 +120,7 @@ function Dashboard() {
       </Card>
       {/* items */}
       <Card sx={{width:"50%", p:2}}><Typography variant="h5" fontWeight={500} >Total Items</Typography>
-      <Typography variant="h4" fontWeight={600} mt={3} >100+</Typography>
+      <Typography variant="h4" fontWeight={600} mt={3} >{data?.data?.total_products || 0}</Typography>
        <Box display={"flex"} alignItems="center" justifyContent="center">
         <Box
     component="img"
@@ -114,12 +140,40 @@ function Dashboard() {
      <Box sx={{display:"flex", gap:3, flexDirection:{xs:"column",md:"row"}  , mt:3  }}>
   
     <Box sx={{display:"flex",width:{ xs: "100%", md:"50%"}, gap:3}}>
-      <Card sx={{width:{ xs: "100%", md:"50%"} , p:2}} ><Typography variant="h6" fontWeight={500} >Lowest Price Items</Typography>
-      <Typography variant="h6" fontWeight={400} mt={1} >steel</Typography>
-      <Typography variant="h4" fontWeight={600} mt={3} >$50</Typography></Card>
-      <Card sx={{width:{ xs: "100%", md:"50%"}, p:2}}><Typography variant="h6" fontWeight={500} >Trending products</Typography>
-      <Typography variant="h6" fontWeight={400} mt={1} >iron</Typography>
-      <Typography variant="h4" fontWeight={600} mt={3} >50+</Typography></Card>
+      <Card sx={{width:{ xs: "100%", md:"50%"} , p:2}} >
+      <Typography variant="h6" fontWeight={500} >Total Quotations</Typography>
+      {/* <Typography variant="h6" fontWeight={400} mt={1} ></Typography> */}
+      <Typography variant="h4" fontWeight={600} mt={3} >{data?.data?.total_quotations || 0}</Typography>
+       <Box display={"flex"} alignItems="center" justifyContent="center">
+        <Box
+    component="img"
+    src={quotation} // replace with your image path
+    alt="quotation"
+    
+    sx={{
+      width: 90,
+      height: 90,
+      objectFit: "contain",
+    }}
+  />
+  </Box>
+      
+      </Card>
+      <Card sx={{width:{ xs: "100%", md:"50%"}, p:2}}><Typography variant="h6" fontWeight={500} >Total Supply Lists</Typography>
+      {/* <Typography variant="h6" fontWeight={400} mt={1} ></Typography> */}
+      <Typography variant="h4" fontWeight={600} mt={3} >{data?.data?.total_supply_lists || 0}</Typography>
+        <Box display={"flex"} alignItems="center" justifyContent="center">
+        <Box
+    component="img"
+    src={checklist} // replace with your image path
+    alt="checklist"
+    sx={{
+      width: 70,
+      height: 70,
+      objectFit: "contain",
+    }}
+  />
+  </Box></Card>
     </Box>
     <Box sx={{display:"flex", width:{ xs: "100%", md:"50%"}, gap:3}}>
       <Card sx={{width:{ xs: "100%", md:"50%"} , p:2}} ><Typography variant="h6" fontWeight={500} >Regular Supplier</Typography>
