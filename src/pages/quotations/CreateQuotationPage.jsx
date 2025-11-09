@@ -10,7 +10,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CreateIcon from '@mui/icons-material/Create';
-import EditIcon from '@mui/icons-material/Edit'; // Keep if used elsewhere
+import EditIcon from '@mui/icons-material/Edit'; 
 
 // Import hooks
 import {
@@ -27,10 +27,7 @@ function CreateQuotationPage() {
   const [productsForSupplier, setProductsForSupplier] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState(new Set());
   const [quotationItems, setQuotationItems] = useState([]);
-  // --- NEW: State to track the supplier ID for the current quotation ---
   const [currentQuotationSupplierId, setCurrentQuotationSupplierId] = useState(null);
-
-  // --- API Hooks ---
   const {
     data: supplierWiseData,
     isLoading,
@@ -39,25 +36,19 @@ function CreateQuotationPage() {
   } = useGetSupplierWiseProductsQuery();
   const [createQuotation, { isLoading: isCreatingQuotation }] = useCreateQuotationMutation();
   const { showNotification } = useNotification();
-
-  // Derive supplier names for the dropdown
   const supplierOptions = useMemo(() => {
     if (!supplierWiseData) return [];
     return Object.keys(supplierWiseData);
   }, [supplierWiseData]);
-
-  // Update product list when supplier name changes (logic remains same)
   useEffect(() => {
     if (selectedSupplierName && supplierWiseData) {
       const products = supplierWiseData[selectedSupplierName] || [];
       setProductsForSupplier(products);
-      setSelectedProducts(new Set()); // Reset product selections for the new supplier
+      setSelectedProducts(new Set()); 
     } else {
       setProductsForSupplier([]);
     }
   }, [selectedSupplierName, supplierWiseData]);
-
-  // --- Handlers ---
   const handleProductSelect = (productId) => {
     setSelectedProducts(prev => {
       const newSet = new Set(prev);
@@ -67,24 +58,16 @@ function CreateQuotationPage() {
     });
   };
 
-  // --- MODIFIED: Add to Quotation Handler ---
   const handleAddToQuotation = () => {
     if (!selectedSupplierName || selectedProducts.size === 0) return;
-
-    // Determine the supplier ID from the first selected product
     const firstProductId = selectedProducts.values().next().value;
     const firstProductInfo = productsForSupplier.find(p => p.id === firstProductId);
-    if (!firstProductInfo) return; // Should not happen
+    if (!firstProductInfo) return; 
 
     const supplierIdToAdd = firstProductInfo.supplier;
-
-    // Check if we are starting a new quote or adding to an existing one
     if (quotationItems.length === 0) {
-      // Starting a new quote, set the current supplier ID
       setCurrentQuotationSupplierId(supplierIdToAdd);
     } else if (supplierIdToAdd !== currentQuotationSupplierId) {
-      // Safeguard: Prevent adding items from different suppliers
-      // This should be caught earlier by the Autocomplete check
       alert("Error: You can only add items from the currently selected supplier for this quotation.");
       return;
     }
@@ -112,15 +95,15 @@ function CreateQuotationPage() {
       return [...prevItems, ...uniqueNewItems];
     });
 
-    // Clear selected products, but KEEP the supplier selected
+
     setSelectedProducts(new Set());
-    // Do NOT reset selectedSupplierName here
+
   };
 
   const handleRemoveQuotationItem = (keyToRemove) => {
     setQuotationItems(prevItems => {
         const remainingItems = prevItems.filter(item => item.key !== keyToRemove);
-        // If list becomes empty, reset the current supplier ID tracker
+
         if (remainingItems.length === 0) {
             setCurrentQuotationSupplierId(null);
         }
@@ -128,7 +111,7 @@ function CreateQuotationPage() {
     });
   };
 
-  // --- MODIFIED: Create Quotation handler (simplified) ---
+
   const handleCreateQuotation = async () => {
     if (quotationItems.length === 0 || currentQuotationSupplierId === null) {
         showNotification({ message: "No items added or supplier not set.", type: "warning" });
@@ -141,13 +124,13 @@ function CreateQuotationPage() {
       total_amount: quotationItems.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2),
       items: quotationItems.map(item => ({
         product_id: item.productId,
-        unit_price: String(item.price), // Ensure string format if API requires
-        total_amount: String(item.price), // Assuming quantity 1, ensure string
+        unit_price: String(item.price),
+        total_amount: String(item.price), 
       })),
-      // Add other top-level fields if your API expects them (e.g., title, notes)
+
       title: `Quotation for ${quotationItems[0]?.supplierName || 'Supplier'}`,
-      notes: "", // Add a notes field if needed
-      currency: quotationItems[0]?.currency || 'USD', // Get currency from first item
+      notes: "", 
+      currency: quotationItems[0]?.currency || 'USD', 
     };
 
     try {
@@ -158,17 +141,16 @@ function CreateQuotationPage() {
         message: `Successfully created quotation ID ${result?.id || payload.supplier_id}.`, // Use ID from response if available
         type: "success",
       });
-      // --- 3. Generate PDF using the data we have ---
-      // Construct the 'quote' object needed by generateQuotationPDF
+   
       const quoteDataForPDF = {
-        id: result?.id || payload.supplier_id, // Use ID from API response if available
+        id: result?.id || payload.supplier_id, 
         supplier_name: quotationItems[0]?.supplierName || 'N/A',
-        created_at: result?.created_at || new Date().toISOString(), // Use API response or now
-        items: quotationItems.map(item => ({ // Map items to match PDF function's expectation
+        created_at: result?.created_at || new Date().toISOString(), 
+        items: quotationItems.map(item => ({ 
             product_name: item.productName,
-            quantity: item.quantity || 1, // Assuming quantity 1 if not stored
+            quantity: item.quantity || 1,
             unit_price: item.price,
-            total_price: item.price // Assuming quantity 1
+            total_price: item.price 
         })),
         total_amount: payload.total_amount,
         currency: payload.currency,
@@ -177,12 +159,12 @@ function CreateQuotationPage() {
       };
 
       try {
-        generateQuotationPDF(quoteDataForPDF); // Call the imported PDF function
+        generateQuotationPDF(quoteDataForPDF); 
       } catch (pdfError) {
         console.error("PDF Generation Error:", pdfError);
         showNotification({ message: "Quotation created but failed to generate PDF.", type: "warning" });
       }
-      // --- End PDF Generation ---
+  
 
       // 3. Clear everything on success
       setQuotationItems([]);

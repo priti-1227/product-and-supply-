@@ -32,11 +32,11 @@ import AddIcon from "@mui/icons-material/Add"
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteIcon from "@mui/icons-material/Delete"
 import SearchIcon from "@mui/icons-material/Search"
-import { useGetSuppliersQuery, useDeleteSupplierMutation } from "../../store/api/suppliersApi"
+import { useGetSuppliersQuery, useDeleteSupplierMutation, useUploadSuppliersMutation } from "../../store/api/suppliersApi"
 import { useNotification } from "../../hooks/useNotification"
 import { handleApiError } from "../../utils/errorHandler"
-import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 
 
@@ -82,6 +82,7 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
   });
 
   const [deleteSupplier, { isLoading: isDeleting }] = useDeleteSupplierMutation()
+  const [uploadSuppliers, { isLoading: isUploading }] = useUploadSuppliersMutation()
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
@@ -119,6 +120,36 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
       handleApiError(err, showNotification)
     }
   }}
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('suppliers', file); // Use the key 'suppliers'
+
+      const response = await uploadSuppliers(formData).unwrap();
+
+      // Show success toast with the message from the API
+      showNotification({
+        message: response.message || `File "${file.name}" uploaded successfully.`,
+        type: "success"
+      });
+      
+      refetch(); // Refetch the suppliers list
+
+    } catch (error) {
+        showNotification({
+        message: error?.data?.message || "Failed to upload file",
+        type: "error" // Set the type here
+      });
+      console.error(error);
+    } finally {
+      // Clear the file input's value
+      event.target.value = null;
+    }
+  }
 
   if (isLoading) {
     return (
@@ -188,7 +219,28 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
             sx={{p:1}}
           />
         </Box> */}
-          <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 }}>
+        
+          <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2 ,gap:2}}>
+             <Tooltip title="Upload Products Excel">
+          <Button
+  variant="outlined"
+  component="label"
+  size="small"
+  disabled={isUploading}
+  sx={{
+    borderRadius: "50%",  // Use 50% for a perfect circle
+    minWidth: 0,          // Remove default min-width
+    width: 40,            // Set equal width
+    height: 40,           // and height
+    p: 0,                 // Remove padding to center the icon
+  }}
+>
+  {/* Place the icon directly as a child */}
+  {isUploading ? <CircularProgress size={24} /> : <CloudUploadIcon />}
+  <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
+  
+</Button>
+</Tooltip>
     <Tooltip title="Filter Suppliers">
       <IconButton
         onClick={() => setIsActive(!isActive)}

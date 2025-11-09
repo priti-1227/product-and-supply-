@@ -1,27 +1,36 @@
-import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom"
-import Dashboard from "./pages/Dashboard"
-import SuppliersList from "./pages/suppliers/SuppliersList"
-import AddSupplier from "./pages/suppliers/AddSupplier"
-import EditSupplier from "./pages/suppliers/EditSupplier"
+import React, { Suspense } from 'react'; // 1. Import Suspense
+import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
+import { Box, CircularProgress } from '@mui/material'; // For the loading fallback
 
-import SupplierListUpload from "./pages/SupplierListUpload"
-// import Quotations from "./pages/Quotations"
-import MainLayout from "./components/layout/MainLayout"
-import ItemsList from "./pages/items/ItemsList"
-import AddItem from "./pages/items/AddItem"
-import EditItem from "./pages/items/EditItem"
-import CreateQuotationPage from "./pages/quotations/CreateQuotationPage"
-import QuotationListPage from "./pages/quotations/QuotationListPage"
-import LoginPage from "./pages/LoginPage"
-import ProtectedRoute from "./components/ProtectedRoute"
-import { useAuth } from "./context/AuthContext"
-import { Box, CircularProgress } from "@mui/material"
+// 2. Import layouts, public pages, and helpers normally
+import MainLayout from "./components/layout/MainLayout";
+import LoginPage from "./pages/LoginPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 
+// 3. LAZY-LOAD all your protected pages
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const SuppliersList = React.lazy(() => import('./pages/suppliers/SuppliersList'));
+const AddSupplier = React.lazy(() => import('./pages/suppliers/AddSupplier'));
+const EditSupplier = React.lazy(() => import('./pages/suppliers/EditSupplier'));
+const ItemsList = React.lazy(() => import('./pages/items/ItemsList'));
+const AddItem = React.lazy(() => import('./pages/items/AddItem'));
+const EditItem = React.lazy(() => import('./pages/items/EditItem'));
+const SupplierListUpload = React.lazy(() => import('./pages/SupplierListUpload'));
+const QuotationListPage = React.lazy(() => import('./pages/quotations/QuotationListPage'));
+const CreateQuotationPage = React.lazy(() => import('./pages/quotations/CreateQuotationPage'));
+
+// 4. Create a loading fallback component
+const PageLoadingFallback = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <CircularProgress />
+  </Box>
+);
 
 export default function App() {
-  const { isLoading } = useAuth(); // 3. Get the loading state
+  const { isLoading } = useAuth();
 
-  // 4. Show a global spinner while the AuthContext is checking localStorage
+  // Your global auth check (this is correct)
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -29,39 +38,37 @@ export default function App() {
       </Box>
     );
   }
+
   return (
-  <BrowserRouter>
-      {/* You only need one <Routes> component */}
-      <Routes>
-        {/* 1. This is your public login route */}
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* 2. This is your protected layout route */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* 3. All your app routes go here as direct children */}
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="suppliers" element={<SuppliersList />} />
-          <Route path="suppliers/add" element={<AddSupplier />} />
-          <Route path="suppliers/edit/:id" element={<EditSupplier />} />
-          <Route path="items" element={<ItemsList />} />
-          <Route path="items/add" element={<AddItem />} />
-          <Route path="items/edit/:id" element={<EditItem />} />
-          <Route path="supplier-list" element={<SupplierListUpload />} />
-          <Route path="quotations" element={<QuotationListPage />} />
-          <Route path="quotations/create" element={<CreateQuotationPage />} />
-        </Route>
-
-        {/* 4. This catch-all route redirects any unknown URL to your dashboard */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+    <BrowserRouter>
+      {/* 5. Wrap your <Routes> in a <Suspense> component */}
+      <Suspense fallback={<PageLoadingFallback />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* All your lazy-loaded routes go here */}
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="suppliers" element={<SuppliersList />} />
+            <Route path="suppliers/add" element={<AddSupplier />} />
+            <Route path="suppliers/edit/:id" element={<EditSupplier />} />
+            <Route path="items" element={<ItemsList />} />
+            <Route path="items/add" element={<AddItem />} />
+            <Route path="items/edit/:id" element={<EditItem />} />
+            <Route path="supplier-list" element={<SupplierListUpload />} />
+            <Route path="quotations" element={<QuotationListPage />} />
+            <Route path="quotations/create" element={<CreateQuotationPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
-  )
+  );
 }

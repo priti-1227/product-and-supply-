@@ -64,6 +64,15 @@ getItems: builder.query({
     { type: TAG_TYPES.ITEMS, id: "LIST" },
   ],
 }),
+uploadProducts: builder.mutation({
+      query: (formData) => ({
+        url: "/product-upload", // Your endpoint
+        method: "POST",
+        body: formData, // This is the FormData object
+      }),
+      // After upload, refetch the entire items list
+      invalidatesTags: [{ type: TAG_TYPES.ITEMS, id: "LIST" }],
+    }),
 
     // DELETE item
     deleteItem: builder.mutation({
@@ -125,4 +134,5 @@ export const {
   useGetItemsBySupplierQuery,
   useLazyGetItemsQuery,
   useLazyGetItemByIdQuery,
+  useUploadProductsMutation,
 } = itemsApi

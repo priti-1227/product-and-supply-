@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuth(); // <-- No longer need isLoading here
+  const { isAuthenticated } = useAuth(); 
   const location = useLocation();
 
   // The check is now simple:

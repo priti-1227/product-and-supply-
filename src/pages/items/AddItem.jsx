@@ -35,8 +35,7 @@ function AddItem() {
         const storedItems = JSON.parse(localStorage.getItem("dummyProducts") || "[]");
         const newItem = {
           ...data,
-          id: Date.now(), // Create a simple unique ID
-          // Ensure prices are numbers
+          id: Date.now(), 
           price: parseFloat(data.price),
           unitPrice: parseFloat(data.unitPrice),
           wholesalePrice: parseFloat(data.wholesalePrice),
@@ -46,7 +45,7 @@ function AddItem() {
         localStorage.setItem("dummyProducts", JSON.stringify(updatedItems));
         
         showNotification({ message: "Item saved to local storage", type: "success" });
-        navigate("/items"); // Assuming you have an /items route
+        navigate("/items");
       } catch (err) {
         showNotification({ message: "Failed to save dummy data", type: "error" });
         console.error(err);
@@ -365,23 +364,23 @@ function AddItem() {
         const file = e.target.files ? e.target.files[0] : null;
 
         if (!file) {
-          // No file selected, just set value to null
+         
           setValue("image", null);
           return;
         }
 
-        // --- This is the validation check ---
+        
         if (file.type.startsWith("image/")) {
-          // Valid image file
-          setValue("image", file); // Stores the file object
+          
+          setValue("image", file); 
         } else {
-          // Invalid file type
+          
           showNotification({ 
             message: "Invalid file type. Please upload a valid image (e.g., PNG, JPG).", 
             type: "error" 
           });
           setValue("image", null); // Set form value to null
-          e.target.value = null; // Clear the file input so the user can re-select
+          e.target.value = null; 
         }
       }}
       style={{ width: "100%" }}

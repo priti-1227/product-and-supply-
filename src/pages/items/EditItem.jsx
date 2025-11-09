@@ -12,7 +12,7 @@ import {
   Grid,
   MenuItem,
   CircularProgress,
-  Checkbox, // <-- Make sure Checkbox is imported
+  Checkbox, 
 } from "@mui/material"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 import SaveIcon from "@mui/icons-material/Save"
@@ -37,12 +37,11 @@ function EditItem() {
     formState: { errors },
     reset,
     control,
-    setValue, // <-- Get setValue for the image input
+    setValue, 
   } = useForm({  defaultValues: {
-    supplier: '', // <-- This ensures the initial value is never undefined
+    supplier: '', 
     name: '',
     description: '',
-    // Initialize other fields as well for consistency
     packing: '',
     currency: '',
     wholesale_price: '',
@@ -67,13 +66,11 @@ function EditItem() {
         is_available: item.is_available,
       })
     }
-  }, [item, suppliersData, reset]) // <-- Updated dependency array
+  }, [item, suppliersData, reset]) 
 
   const onSubmit = async (data) => {
-    // For file uploads on edit, you'd need FormData again.
     const formData = new FormData();
     Object.keys(data).forEach(key => {
-        // Only append the image if it's a new file object
         if (key === 'image' && data.image instanceof File) {
             formData.append('image', data.image);
         } else if (key !== 'image' && data[key] != null) {
@@ -230,12 +227,11 @@ function EditItem() {
         const file = e.target.files ? e.target.files[0] : null;
 
         if (!file) {
-          // No file selected, just set value to null
           setValue("image", null);
           return;
         }
 
-        // --- This is the validation check ---
+        
         if (file.type.startsWith("image/")) {
           // Valid image file
           setValue("image", file); // Stores the file object
@@ -245,8 +241,8 @@ function EditItem() {
             message: "Invalid file type. Please upload a valid image (e.g., PNG, JPG).", 
             type: "error" 
           });
-          setValue("image", null); // Set form value to null
-          e.target.value = null; // Clear the file input so the user can re-select
+          setValue("image", null); 
+          e.target.value = null; 
         }
       }}
       style={{ width: "100%" }}
@@ -262,8 +258,8 @@ function EditItem() {
       control={control}
       render={({ field }) => (
         <Checkbox
-          checked={field.value} // Use field.value to set the checked state
-          onChange={field.onChange} // Use field.onChange to update the form state
+          checked={field.value} 
+          onChange={field.onChange} 
         />
       )}
     />
