@@ -39,32 +39,6 @@ export const supplierListApi = createApi({
       providesTags: (result, error, id) => [{ type: TAG_TYPES.SUPPLIER_LISTS, id }],
     }),
 
-    // POST validate supplier list before import
-    validateSupplierList: builder.mutation({
-      query: (formData) => ({
-        url: "/supplier-lists/validate",
-        method: "POST",
-        body: formData,
-        prepareHeaders: (headers) => {
-          headers.delete("Content-Type")
-          return headers
-        },
-      }),
-    }),
-
-    // POST confirm import after validation
-    confirmSupplierListImport: builder.mutation({
-      query: ({ uploadId, mappings }) => ({
-        url: "/supplier-lists/confirm-import",
-        method: "POST",
-        body: { uploadId, mappings },
-      }),
-      invalidatesTags: [
-        { type: TAG_TYPES.SUPPLIER_LISTS, id: "LIST" },
-        { type: TAG_TYPES.SUPPLIERS, id: "LIST" },
-        { type: TAG_TYPES.ITEMS, id: "LIST" },
-      ],
-    }),
   }),
 })
 
