@@ -235,7 +235,6 @@ const { data, isLoading, isError, error, refetch } = useGetSuppliersQuery({
     p: 0,                 // Remove padding to center the icon
   }}
 >
-  {/* Place the icon directly as a child */}
   {isUploading ? <CircularProgress size={24} /> : <CloudUploadIcon />}
   <input type="file" hidden accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
   
