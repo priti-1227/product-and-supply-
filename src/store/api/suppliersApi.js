@@ -6,13 +6,9 @@ export const suppliersApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: [TAG_TYPES.SUPPLIERS, TAG_TYPES.DASHBOARD],
   endpoints: (builder) => ({
- // GET all suppliers
 getSuppliers: builder.query({
-  // 1. The query is simplified. The API returns a full list, so no parameters are needed.
   query: () => "/suppliers/",
 
-  // 2. This 'providesTags' is now correct.
-  // 'result' will be the object { data: [...], total: ... } returned by transformResponse.
   providesTags: (result) =>
     result
       ? [
@@ -21,12 +17,10 @@ getSuppliers: builder.query({
         ]
       : [{ type: TAG_TYPES.SUPPLIERS, id: "LIST" }],
 
-  // 3. This is the main fix.
-  // It transforms the flat array [...] into the object { data: [...], total: ... }
-  transformResponse: (response) => { // 'response' is the flat array [...]
+  transformResponse: (response) => { 
     return {
-      data: response || [], // Put the array into the 'data' key
-      total: response?.length || 0, // Calculate total from the array's length
+      data: response || [], 
+      total: response?.length || 0, 
     };
   },
 }),
